@@ -1,0 +1,180 @@
+================================================================================
+SECTION 1: MASTER PROMPT (VERBATIM)
+================================================================================
+
+# MASTER PROMPT: BUILD CLAIMBACK
+
+Act as a senior frontend developer, UI/UX designer, JavaScript engineer, and QA tester. Build a complete, polished, functional web application called CLAIMBACK.
+
+## 1. PROJECT VISION
+
+CLAIMBACK helps users organize product purchases, receipts, return windows, warranty periods, refundable deposits, and pending refund claims.
+
+Its mission is to help people avoid missing important deadlines and make it easier to prepare evidence when requesting refunds, repairs, replacements, or clarification from a seller or service provider.
+
+This must be a working application, not a static dashboard or design mockup.
+
+## 2. STRICT TECHNOLOGY REQUIREMENTS
+
+Use only:
+- HTML5
+- CSS3
+- Vanilla JavaScript
+
+Do not use React, TypeScript, Node.js, backend servers, build tools, or other programming languages.
+
+Use localStorage for persistence. Each HTML page must run independently when opened directly in a browser.
+
+Keep all necessary CSS and JavaScript inside each HTML file. Avoid requiring a backend, build process, or paid API.
+
+## 3. REQUIRED THREE STANDALONE HTML PAGES
+
+Create exactly these three main HTML pages:
+
+### Page 1: claimback.html — Purchase Vault
+Features:
+- Add a purchase with product name, seller, purchase date, amount, and receipt reference.
+- Record return-window length and warranty duration.
+- Calculate return deadlines and warranty end dates.
+- Edit and delete purchase records.
+- Search, sort, and filter purchases.
+- Attach or reference proof-of-purchase files when supported by the browser.
+- Display the days remaining for return and warranty deadlines.
+- Include fictional sample purchases.
+- Clearly distinguish user-entered terms from verified seller policies.
+
+### Page 2: deadlines.html — Deadline Radar
+Features:
+- Show upcoming return windows and warranty expirations.
+- Sort deadlines by urgency.
+- Filter by return, warranty, refund, or deposit.
+- Flag overdue or missing information.
+- Allow users to mark an item as needing action, in progress, completed, or not applicable.
+- Display a timeline of important events.
+- Allow users to set an earlier preparation date.
+- Explain that actual eligibility depends on the seller's terms and applicable policies.
+- Display clear empty states.
+
+### Page 3: recovery-center.html — Recovery Center
+Features:
+- Create a refund, return, repair, replacement, or deposit claim.
+- Record the amount requested, date submitted, seller, reference number, and status.
+- Track statuses such as draft, submitted, awaiting response, resolved, rejected, or closed.
+- Generate a customizable claim or refund-request letter.
+- Copy the generated letter to the clipboard.
+- Generate a checklist of supporting evidence.
+- Calculate requested, pending, and confirmed recovered amounts separately.
+- Export claim records and summaries.
+- Maintain a dated activity history for each claim.
+
+## 4. FUNCTIONAL REQUIREMENTS
+
+Each page must have at least five meaningful working interactive elements.
+
+All forms, buttons, search fields, filters, navigation links, dialogs, and exports must work.
+
+Use shared localStorage keys and a consistent data structure across all three HTML files.
+
+The purchase record, deadline, and claim must be linkable so that a claim can refer to its related purchase.
+
+Validate required fields, amounts, dates, and invalid inputs. Prevent impossible date calculations and show helpful error messages.
+
+Provide sample data that makes the application useful immediately after opening it.
+
+## 5. DEADLINE AND MONEY LOGIC
+
+- Calculate return deadlines from the purchase date and the user-entered return-window duration.
+- Calculate warranty end dates using the duration entered by the user.
+- Allow manual entry of a seller-provided deadline when the policy specifies an exact date.
+- Clearly state that the seller's actual policy takes precedence over estimates.
+- Calculate days remaining using calendar dates consistently.
+- Flag deadlines that have passed.
+- Do not assume that every product has a return window or that every defect qualifies for a warranty claim.
+- Track requested refunds separately from approved and received refunds.
+- Never label a requested amount as money recovered until the user records that the money was received.
+
+## 6. DESIGN DIRECTION
+
+Create a premium consumer-protection interface.
+
+Visual style:
+- Dark navy or charcoal background.
+- Cyan or electric-blue accents.
+- White and muted-gray typography.
+- Amber for upcoming deadlines.
+- Red for overdue actions.
+- Green for completed recoveries.
+- Clean cards, subtle borders, polished forms, and restrained gradients.
+- Responsive layouts for desktop, tablet, and mobile.
+- Consistent navigation across all pages.
+- Accessible contrast and visible keyboard-focus states.
+- Useful toast notifications and confirmation dialogs.
+
+The design should feel like a trustworthy financial utility, not a generic admin dashboard.
+
+Avoid excessive animation, fake statistics, and controls that do nothing.
+
+## 7. DATA, SECURITY AND PRIVACY
+
+Use fictional sample data and label it clearly.
+
+Persist records in localStorage. Explain that browser-local storage is not encrypted cloud storage and can be lost when browser data is cleared.
+
+Do not request bank credentials, card numbers, or account passwords.
+
+Do not upload receipts or documents to external services. Prefer local metadata and optional local file references.
+
+Do not make legal guarantees or claim that a seller must approve a claim. Generated letters must be editable drafts, not legal advice.
+
+## 8. DELIVERABLES
+
+Create:
+- claimback.html
+- deadlines.html
+- recovery-center.html
+- README.md with setup and usage instructions.
+- prompts.txt containing this master prompt and any additional implementation prompts.
+
+If the environment supports direct file creation, create the files in the project folder.
+
+Do not merely provide snippets or a plan. Implement the complete application.
+
+## 9. TESTING AND FINAL REVIEW
+
+Before finishing:
+- Open all three pages independently.
+- Test navigation and shared localStorage data.
+- Test purchase creation, editing, and deletion.
+- Verify deadline calculations around month-end and year-end.
+- Test overdue and upcoming deadline states.
+- Test claim creation and status changes.
+- Verify requested, approved, and received amounts are calculated separately.
+- Test letter generation and clipboard copying.
+- Test CSV export.
+- Check mobile responsiveness.
+- Confirm every visible button performs a real action.
+- Fix any errors found.
+
+Finish by listing all created files, explaining how to run the project, and providing a manual testing checklist.
+
+Prioritize a reliable, complete working prototype over unnecessary complexity.
+
+
+================================================================================
+SECTION 2: ADDITIONAL IMPLEMENTATION & QA PROMPTS
+================================================================================
+
+### Implementation Prompt 1 — Shared LocalStorage Contract & DST-Safe Calendar Math
+Design a shared Vanilla JS data layer embedded identically in `claimback.html`, `deadlines.html`, and `recovery-center.html` using versioned `localStorage` keys (`claimback_initialized_v1`, `claimback_purchases_v1`, `claimback_deadline_meta_v1`, `claimback_custom_deadlines_v1`, `claimback_claims_v1`). Parse `YYYY-MM-DD` strings into local `(year, month, day)` integers rather than UTC `new Date(str)` to avoid timezone day-shifts, clamp month-end additions cleanly (`Jan 31 + 1 month -> Feb 28/29`, `Dec 31 + 2 months -> Feb 28`), and compute `diffCalendarDays` via `Date.UTC(y, m, d)` so Daylight Saving Time transitions never introduce rounding errors.
+
+### Implementation Prompt 2 — Purchase Vault (`claimback.html`)
+Implement the Purchase Vault as a self-contained HTML5/CSS3/JS file featuring a dark navy `#0B1120` financial-utility palette, tabular numerals, accessible dialogs, policy source differentiation (`seller_verified` vs. `user_estimate`), optional return/warranty/deposit toggles, manual exact seller deadline overrides, local-only proof-of-purchase file metadata & small-image preview opt-in, search/filter/sort controls, deep-linking to `recovery-center.html`, and RFC-4180 CSV export.
+
+### Implementation Prompt 3 — Deadline Radar (`deadlines.html`)
+Implement Deadline Radar to aggregate purchase return windows, warranty expirations, refundable deposit due dates, claim follow-up dates, and standalone logged deadlines. Support urgency sorting, category filters (`return`, `warranty`, `refund`, `deposit`), workflow state selectors (`needs_action`, `in_progress`, `completed`, `not_applicable`), missing-receipt/missing-date flags, validated earlier preparation dates (`prepDate <= dueDate`), and a clickable chronological Event Timeline.
+
+### Implementation Prompt 4 — Recovery Center (`recovery-center.html`)
+Implement Recovery Center with linked Purchase Vault lookups, strict four-bucket financial accounting (`Total Requested`, `Pending Seller Review`, `Approved · Awaiting Payout`, and `Confirmed Recovered` counted strictly when `paymentReceived === true`), dynamic claim-type supporting evidence checklists, tone-selectable editable request letter generation with clipboard copy and `.txt` download, dated activity history logging, and both CSV and `.txt` summary report exports.
+
+### Implementation Prompt 5 — Automated & Manual QA Verification
+Verify JavaScript syntax and runtime behavior across all three standalone HTML files, test month-end (`2026-01-31 + 1 month`) and year-end (`2026-12-20 + 30 days`) deadline math, verify financial separation when claims are approved vs. actually received, confirm zero `window.alert`/`window.confirm` calls, and ensure responsive touch targets and keyboard Escape/focus-visible accessibility.

@@ -1,0 +1,2625 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deadline Radar — CLAIMBACK</title>
+  <meta name="description" content="Monitor upcoming return windows, warranty expirations, refundable deposits, and refund follow-ups sorted by urgency in CLAIMBACK." />
+  <meta property="og:title" content="Deadline Radar — CLAIMBACK" />
+  <meta property="og:description" content="Monitor upcoming return windows, warranty expirations, refundable deposits, and refund follow-ups sorted by urgency in CLAIMBACK." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-canvas: #0b1120;
+      --bg-surface: #121a2d;
+      --bg-elevated: #172238;
+      --bg-input: #0e1626;
+      --bg-hover: rgba(34, 211, 238, 0.05);
+      --border-default: #1f2d47;
+      --border-subtle: rgba(148, 163, 184, 0.14);
+      --border-focus: #22d3ee;
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --accent: #22d3ee;
+      --accent-hover: #06b6d4;
+      --accent-ink: #07111f;
+      --amber: #fbbf24;
+      --red: #f87171;
+      --green: #34d399;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --radius-lg: 10px;
+      --radius-md: 8px;
+      --radius-sm: 6px;
+      --transition: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      color-scheme: dark;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.55;
+      letter-spacing: 0.01em;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mono, .tabular {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+    }
+
+    a, button, input, select, textarea {
+      font-family: inherit;
+      color: inherit;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+      }
+    }
+
+    /* Top Bar Contract */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(11, 17, 32, 0.94);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border-default);
+    }
+
+    .topbar-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+    }
+
+    .brand-link {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--text-primary);
+      text-decoration: none;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .nav-link {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 6px 0;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: color var(--transition), border-color var(--transition);
+    }
+
+    .nav-link:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-link[aria-current="page"] {
+      color: var(--text-primary);
+      border-bottom-color: var(--accent);
+      font-weight: 600;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: transparent;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      min-height: 40px;
+      min-width: 40px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mobile-nav-panel {
+      display: none;
+      border-top: 1px solid var(--border-default);
+      background: var(--bg-surface);
+      padding: 12px 24px 16px;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .mobile-nav-panel.open {
+      display: flex;
+    }
+
+    .mobile-nav-panel .nav-link {
+      padding: 10px 0;
+      text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 16px;
+      min-height: 40px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background-color var(--transition), border-color var(--transition), color var(--transition), transform var(--transition);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border-color: var(--border-default);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--text-muted);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border-color: var(--border-default);
+      padding: 7px 12px;
+      min-height: 36px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+
+    .btn-ghost:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .btn-danger {
+      background: rgba(248, 113, 113, 0.12);
+      color: var(--red);
+      border-color: rgba(248, 113, 113, 0.35);
+    }
+
+    .btn-danger:hover {
+      background: rgba(248, 113, 113, 0.2);
+    }
+
+    /* Layout */
+    .container {
+      max-width: 1320px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+      flex: 1;
+    }
+
+    .page-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: clamp(1.65rem, 2.6vw, 2.15rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      text-wrap: balance;
+      margin-bottom: 6px;
+    }
+
+    .page-subtitle {
+      color: var(--text-muted);
+      font-size: 0.9375rem;
+      max-width: 68ch;
+    }
+
+    .policy-bar {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      font-size: 0.84375rem;
+      color: var(--text-secondary);
+    }
+
+    .policy-bar strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* Summary Strip */
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+
+    .summary-cell {
+      padding: 20px 22px;
+      border-right: 1px solid var(--border-default);
+    }
+
+    .summary-cell:last-child {
+      border-right: none;
+    }
+
+    .summary-label {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .summary-value {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .summary-sub {
+      font-size: 0.78125rem;
+      color: var(--text-muted);
+    }
+
+    /* Toolbar */
+    .toolbar {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .toolbar-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1 1 260px;
+      min-width: 220px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .input, .select, .textarea {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      padding: 9px 12px;
+      min-height: 40px;
+      font-size: 0.875rem;
+      transition: border-color var(--transition);
+    }
+
+    .input:focus, .select:focus, .textarea:focus {
+      border-color: var(--border-focus);
+      outline: none;
+    }
+
+    .search-input {
+      padding-left: 36px;
+    }
+
+    .segmented {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 4px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+    }
+
+    .seg-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      min-height: 32px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color var(--transition), color var(--transition);
+    }
+
+    .seg-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .seg-btn.active {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .controls-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .select-compact {
+      width: auto;
+      min-width: 185px;
+    }
+
+    /* Two-column Workspace: Queue (8fr) + Event Timeline (4fr) */
+    .radar-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.9fr) minmax(300px, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .surface-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-default);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .panel-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    /* Deadline List Rows (Single-elevation, hairline dividers, zero nested cards) */
+    .deadline-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .deadline-row {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: background-color var(--transition);
+    }
+
+    .deadline-row:hover {
+      background-color: var(--bg-hover);
+    }
+
+    .deadline-row.focused {
+      background-color: rgba(34, 211, 238, 0.1);
+    }
+
+    .deadline-row:last-child {
+      border-bottom: none;
+    }
+
+    .deadline-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .deadline-title {
+      font-size: 0.96875rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .meta-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78125rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    .meta-sep {
+      color: rgba(148, 163, 184, 0.45);
+      user-select: none;
+    }
+
+    .sample-tag { color: var(--accent); font-weight: 500; }
+    .state-urgent { color: var(--amber); font-weight: 600; }
+    .state-overdue { color: var(--red); font-weight: 600; }
+    .state-ok { color: var(--green); font-weight: 600; }
+    .state-neutral { color: var(--text-muted); }
+
+    .urgency-readout {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .urgency-primary {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .urgency-date {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.78125rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .deadline-flags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.8125rem;
+    }
+
+    .flag-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .deadline-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding-top: 6px;
+    }
+
+    .status-select {
+      background: var(--bg-input);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      padding: 6px 10px;
+      min-height: 36px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .action-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Chronological Event Timeline */
+    .timeline-body {
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-left: 22px;
+      padding-bottom: 18px;
+      border-left: 1px solid var(--border-default);
+      cursor: pointer;
+    }
+
+    .timeline-item:last-child {
+      padding-bottom: 4px;
+      border-left-color: transparent;
+    }
+
+    .timeline-marker {
+      position: absolute;
+      left: -5px;
+      top: 4px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--bg-surface);
+      border: 2px solid var(--text-muted);
+    }
+
+    .timeline-item.tl-overdue .timeline-marker { border-color: var(--red); background: var(--red); }
+    .timeline-item.tl-urgent .timeline-marker { border-color: var(--amber); background: var(--amber); }
+    .timeline-item.tl-today .timeline-marker { border-color: var(--accent); background: var(--accent); }
+    .timeline-item.tl-ok .timeline-marker { border-color: var(--green); }
+
+    .timeline-date {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .timeline-label {
+      font-size: 0.84375rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.35;
+    }
+
+    .timeline-sub {
+      font-size: 0.78125rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .timeline-item:hover .timeline-label {
+      color: var(--accent);
+    }
+
+    /* Empty State */
+    .empty-state {
+      padding: 52px 24px;
+      text-align: center;
+    }
+
+    .empty-title {
+      font-size: 1.0625rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .empty-desc {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      max-width: 46ch;
+      margin: 0 auto 20px;
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: rgba(5, 9, 18, 0.78);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 600px;
+      max-height: calc(100vh - 40px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-sm { max-width: 480px; }
+
+    .modal-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border-default);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .modal-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      font-size: 1.25rem;
+    }
+
+    .modal-body {
+      padding: 22px 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-default);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      background: rgba(14, 22, 38, 0.45);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-field.full { grid-column: 1 / -1; }
+
+    .form-label {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .form-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .form-error {
+      font-size: 0.78125rem;
+      color: var(--red);
+      font-weight: 500;
+      display: none;
+    }
+
+    .form-error.visible { display: block; }
+
+    .form-divider {
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 16px;
+    }
+
+    .section-heading {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .preset-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .site-footer {
+      border-top: 1px solid var(--border-default);
+      padding: 20px 24px;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+
+    .site-footer-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .toast-region {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 80;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 380px;
+    }
+
+    .toast {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      color: var(--text-primary);
+      font-size: 0.84375rem;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    }
+
+    @media (max-width: 1024px) {
+      .radar-grid {
+        grid-template-columns: 1fr;
+      }
+      .summary-strip {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .summary-cell:nth-child(2) { border-right: none; }
+      .summary-cell:nth-child(1), .summary-cell:nth-child(2) {
+        border-bottom: 1px solid var(--border-default);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .mobile-menu-btn { display: inline-flex; }
+      .topbar-inner { padding: 10px 16px; gap: 12px; }
+      .container { padding: 20px 16px 48px; }
+      .summary-strip { grid-template-columns: 1fr; }
+      .summary-cell { border-right: none; border-bottom: 1px solid var(--border-default); }
+      .summary-cell:last-child { border-bottom: none; }
+      .form-grid { grid-template-columns: 1fr; }
+      .urgency-readout { text-align: left; }
+      .policy-bar { flex-direction: column; }
+      .btn { min-height: 44px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Bar Contract -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="claimback.html" class="brand-link">CLAIMBACK</a>
+
+      <nav class="nav-links" aria-label="Primary Navigation">
+        <a href="claimback.html" class="nav-link">Purchase Vault</a>
+        <a href="deadlines.html" class="nav-link" aria-current="page">Deadline Radar</a>
+        <a href="recovery-center.html" class="nav-link">Recovery Center</a>
+        <button type="button" class="nav-link" id="openPrivacyBtn">Data &amp; Privacy</button>
+      </nav>
+
+      <div class="topbar-actions">
+        <button type="button" class="btn btn-primary" id="topAddDeadlineBtn">+ Log Deadline</button>
+        <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-expanded="false" aria-controls="mobileNavPanel" aria-label="Toggle Menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="mobile-nav-panel" id="mobileNavPanel">
+      <a href="claimback.html" class="nav-link">Purchase Vault</a>
+      <a href="deadlines.html" class="nav-link" aria-current="page">Deadline Radar</a>
+      <a href="recovery-center.html" class="nav-link">Recovery Center</a>
+      <button type="button" class="nav-link" id="openPrivacyMobileBtn">Data &amp; Privacy</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="page-header">
+      <div>
+        <h1 class="page-title">Deadline Radar</h1>
+        <p class="page-subtitle">Track return cutoffs, warranty expirations, refundable deposits, and refund follow-ups before action windows close.</p>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-secondary" id="exportDeadlinesCsvBtn">Export CSV</button>
+      </div>
+    </section>
+
+    <aside class="policy-bar" aria-label="Eligibility Disclaimer">
+      <div>
+        <strong>Eligibility &amp; Seller Policy Notice:</strong> Actual eligibility for a return, refund, repair, or deposit release depends on the seller's written terms, item condition, and applicable consumer policies. Not every product carries a return window and not every defect qualifies under warranty. Set an earlier preparation date so you have time to gather receipts and packaging.
+      </div>
+    </aside>
+
+    <!-- Summary Strip -->
+    <section class="summary-strip" aria-label="Deadline Overview">
+      <div class="summary-cell">
+        <div class="summary-label">Overdue Actions</div>
+        <div class="summary-value" id="statOverdue">0</div>
+        <div class="summary-sub">Passed deadlines still open</div>
+      </div>
+      <div class="summary-cell">
+        <div class="summary-label">Due Within 14 Days</div>
+        <div class="summary-value" id="statDueSoon">0</div>
+        <div class="summary-sub" id="statPrepReminders">0 preparation dates active</div>
+      </div>
+      <div class="summary-cell">
+        <div class="summary-label">Missing Information</div>
+        <div class="summary-value" id="statMissingInfo">0</div>
+        <div class="summary-sub">Missing receipt ref or deadline date</div>
+      </div>
+      <div class="summary-cell">
+        <div class="summary-label">Completed / N/A</div>
+        <div class="summary-value" id="statResolvedCount">0</div>
+        <div class="summary-sub" id="statInProgressCount">0 currently in progress</div>
+      </div>
+    </section>
+
+    <!-- Filter & Sort Toolbar -->
+    <section class="toolbar" aria-label="Filter and Sort Deadlines">
+      <div class="toolbar-row">
+        <div class="segmented" role="group" aria-label="Filter by deadline category">
+          <button type="button" class="seg-btn active" data-type="all">All Types</button>
+          <button type="button" class="seg-btn" data-type="return">Return</button>
+          <button type="button" class="seg-btn" data-type="warranty">Warranty</button>
+          <button type="button" class="seg-btn" data-type="refund">Refund</button>
+          <button type="button" class="seg-btn" data-type="deposit">Deposit</button>
+        </div>
+
+        <div class="controls-group">
+          <select id="stateFilterSelect" class="select select-compact" aria-label="Filter by workflow status">
+            <option value="active_only">View: Open Items (Needs Action &amp; In Progress)</option>
+            <option value="all">View: All Items (Including Completed &amp; N/A)</option>
+            <option value="overdue_flagged">View: Overdue &amp; Missing Info Only</option>
+            <option value="prep_due">View: Preparation Date Reached / Set</option>
+            <option value="needs_action">View: Needs Action Only</option>
+            <option value="in_progress">View: In Progress Only</option>
+            <option value="completed">View: Completed Only</option>
+          </select>
+
+          <select id="sortDeadlinesSelect" class="select select-compact" aria-label="Sort deadlines">
+            <option value="urgency">Sort: Urgency (Soonest / Overdue First)</option>
+            <option value="prep_asc">Sort: Preparation Date (Soonest)</option>
+            <option value="amount_desc">Sort: Amount at Stake (High to Low)</option>
+            <option value="seller_asc">Sort: Seller (A–Z)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="toolbar-row">
+        <div class="search-wrap">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.3-4.3" stroke-linecap="round"></path>
+          </svg>
+          <input type="search" id="deadlineSearchInput" class="input search-input" placeholder="Search item, seller, reference, or preparation notes..." aria-label="Search deadlines" />
+        </div>
+
+        <div class="controls-group">
+          <span class="meta-line" id="deadlineResultsText">Showing 0 deadlines</span>
+          <button type="button" class="btn btn-ghost" id="resetDeadlineFiltersBtn" style="display:none;">Reset Filters</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Workspace Grid -->
+    <div class="radar-grid">
+      <!-- Left: Prioritized Deadline Queue -->
+      <section class="surface-panel" aria-label="Prioritized Deadlines">
+        <div class="panel-header">
+          <h2 class="panel-title">Prioritized Deadline Queue</h2>
+          <span class="meta-line" id="todayAnchorText"></span>
+        </div>
+
+        <div class="deadline-list" id="deadlineListContainer"></div>
+
+        <div class="empty-state" id="deadlineEmptyState" style="display:none;">
+          <h3 class="empty-title" id="deadlineEmptyTitle">No deadlines match these filters</h3>
+          <p class="empty-desc" id="deadlineEmptyDesc">Change the type or workflow filter above, add a purchase in Purchase Vault, or log a standalone refund or deposit deadline.</p>
+          <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-secondary" id="emptyResetFiltersBtn">Show All Deadlines</button>
+            <button type="button" class="btn btn-primary" id="emptyAddCustomBtn">+ Log Deadline</button>
+            <a href="claimback.html?action=new" class="btn btn-ghost">Add Purchase</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Event Timeline -->
+      <aside class="surface-panel" aria-label="Timeline of Important Events">
+        <div class="panel-header">
+          <h2 class="panel-title">Event Timeline</h2>
+          <select id="timelineScopeSelect" class="status-select" aria-label="Filter timeline horizon">
+            <option value="near">Recent &amp; Next 45 Days</option>
+            <option value="all_upcoming">All Upcoming Milestones</option>
+            <option value="all">Full Chronology</option>
+          </select>
+        </div>
+        <div class="timeline-body" id="timelineContainer"></div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <span>CLAIMBACK Consumer Protection Utility · Seller written terms govern actual eligibility.</span>
+      <span>Local browser storage only · Export JSON backups in Data &amp; Privacy.</span>
+    </div>
+  </footer>
+
+  <!-- Set Preparation Date & Note Modal -->
+  <div class="modal-backdrop" id="prepModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="prepModalTitle">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2 class="modal-title" id="prepModalTitle">Set Preparation Date</h2>
+        <button type="button" class="modal-close" id="closePrepModalBtn" aria-label="Close preparation modal">&times;</button>
+      </div>
+      <form id="prepForm" novalidate>
+        <div class="modal-body">
+          <input type="hidden" id="prepDeadlineIdInput" />
+          <input type="hidden" id="prepMaxDateInput" />
+          <input type="hidden" id="prepMinDateInput" />
+
+          <div>
+            <div style="font-weight:600;" id="prepItemSummary"></div>
+            <div class="meta-line" id="prepDueDateSummary" style="margin-top:2px;"></div>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="prepDateInput">Earlier Preparation Date</label>
+            <input type="date" id="prepDateInput" class="input tabular" />
+            <div class="preset-row" id="prepPresetsRow">
+              <button type="button" class="btn btn-ghost" data-offset="-3">3 days before deadline</button>
+              <button type="button" class="btn btn-ghost" data-offset="-7">7 days before</button>
+              <button type="button" class="btn btn-ghost" data-offset="-14">14 days before</button>
+              <button type="button" class="btn btn-ghost" data-offset="clear">Clear date</button>
+            </div>
+            <span class="form-error" id="errPrepDate">Preparation date must be a valid date not later than the deadline (and not before purchase date).</span>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="prepNoteInput">Preparation Action Note</label>
+            <textarea id="prepNoteInput" class="textarea" rows="3" placeholder="e.g., Photograph serial tag, pack original cables, download PDF invoice..." maxlength="300"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" id="cancelPrepModalBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Preparation Plan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Log Custom Standalone Deadline Modal -->
+  <div class="modal-backdrop" id="customModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="customModalTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="customModalTitle">Log Standalone Deadline</h2>
+        <button type="button" class="modal-close" id="closeCustomModalBtn" aria-label="Close custom deadline modal">&times;</button>
+      </div>
+      <form id="customDeadlineForm" novalidate>
+        <div class="modal-body">
+          <p class="form-hint">Purchase returns and warranties sync automatically from Purchase Vault. Use this form to track standalone refund promises, service cancellations, or deposit releases.</p>
+          <div class="form-grid">
+            <div class="form-field full">
+              <label class="form-label" for="customTitleInput">Deadline Description *</label>
+              <input type="text" id="customTitleInput" class="input" placeholder="e.g., Airline Cancelled Flight Refund Check" required maxlength="120" />
+              <span class="form-error" id="errCustomTitle">Enter a short title for this deadline.</span>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="customTypeInput">Deadline Category *</label>
+              <select id="customTypeInput" class="select">
+                <option value="refund">Refund Follow-Up</option>
+                <option value="deposit">Refundable Deposit</option>
+                <option value="return">Return Cutoff</option>
+                <option value="warranty">Warranty Expiration</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="customSellerInput">Seller or Provider *</label>
+              <input type="text" id="customSellerInput" class="input" placeholder="e.g., Pacific Skyways" required maxlength="100" />
+              <span class="form-error" id="errCustomSeller">Enter the seller or service provider.</span>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="customStartDateInput">Purchase / Agreement Date</label>
+              <input type="date" id="customStartDateInput" class="input tabular" />
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="customDueDateInput">Target Deadline Date *</label>
+              <input type="date" id="customDueDateInput" class="input tabular" required />
+              <span class="form-error" id="errCustomDue">Enter a valid deadline date (not earlier than the agreement date).</span>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="customAmountInput">Amount at Stake (USD)</label>
+              <input type="number" id="customAmountInput" class="input tabular" min="0" max="1000000" step="0.01" placeholder="0.00" />
+              <span class="form-error" id="errCustomAmount">Enter a non-negative dollar amount.</span>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="customRefInput">Reference / Confirmation #</label>
+              <input type="text" id="customRefInput" class="input tabular" placeholder="e.g., CONF-7812" maxlength="80" />
+            </div>
+
+            <div class="form-field full">
+              <label class="form-label" for="customPolicySourceInput">Policy Verification</label>
+              <select id="customPolicySourceInput" class="select">
+                <option value="seller_verified">Seller-verified written deadline</option>
+                <option value="user_estimate">User-entered estimate</option>
+              </select>
+            </div>
+
+            <div class="form-field full">
+              <label class="form-label" for="customNotesInput">Notes</label>
+              <textarea id="customNotesInput" class="textarea" rows="2" placeholder="Conditions or steps required before deadline..." maxlength="300"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" id="cancelCustomModalBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Deadline</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div class="modal-backdrop" id="confirmModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2 class="modal-title" id="confirmModalTitle">Confirm Action</h2>
+        <button type="button" class="modal-close" id="closeConfirmModalBtn" aria-label="Close confirmation">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmModalMessage" style="color:var(--text-secondary);"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" id="cancelConfirmBtn">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmActionBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data & Privacy Modal -->
+  <div class="modal-backdrop" id="privacyModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="privacyModalTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="privacyModalTitle">Local Storage, Backups &amp; Privacy</h2>
+        <button type="button" class="modal-close" id="closePrivacyModalBtn" aria-label="Close data modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <h3 class="section-heading">Browser-Local Persistence</h3>
+          <p class="page-subtitle" style="font-size:0.875rem; margin-top:4px;">
+            All records are stored locally in your browser's <code class="mono">localStorage</code> and shared across Purchase Vault, Deadline Radar, and Recovery Center. Local storage is not encrypted cloud backup and can be lost if browser site data is cleared.
+          </p>
+        </div>
+        <div class="form-divider">
+          <h3 class="section-heading">Backup &amp; Restore</h3>
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+            <button type="button" class="btn btn-primary" id="exportJsonBackupBtn">Export Full JSON Backup</button>
+            <label class="btn btn-secondary" style="cursor:pointer;">
+              <span>Import JSON Backup</span>
+              <input type="file" id="importJsonFileInput" accept=".json,application/json" style="display:none;" />
+            </label>
+          </div>
+        </div>
+        <div class="form-divider">
+          <h3 class="section-heading">Sample Data &amp; Reset</h3>
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+            <button type="button" class="btn btn-secondary" id="restoreSamplesBtn">Restore Fictional Sample Data</button>
+            <button type="button" class="btn btn-danger" id="clearAllStorageBtn">Clear All Local Data</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="donePrivacyModalBtn">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* =========================================================================
+       * SHARED CLAIMBACK STORAGE & CALENDAR ENGINE (v1)
+       * ========================================================================= */
+      const STORAGE_KEYS = {
+        INIT: 'claimback_initialized_v1',
+        PURCHASES: 'claimback_purchases_v1',
+        DEADLINE_META: 'claimback_deadline_meta_v1',
+        CUSTOM_DEADLINES: 'claimback_custom_deadlines_v1',
+        CLAIMS: 'claimback_claims_v1'
+      };
+
+      function parseYMD(ymd) {
+        if (!ymd || typeof ymd !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return null;
+        const parts = ymd.split('-').map(Number);
+        const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+        if (dt.getFullYear() !== parts[0] || dt.getMonth() !== parts[1] - 1 || dt.getDate() !== parts[2]) return null;
+        return dt;
+      }
+
+      function formatYMD(dt) {
+        const y = dt.getFullYear();
+        const m = String(dt.getMonth() + 1).padStart(2, '0');
+        const d = String(dt.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + d;
+      }
+
+      function todayYMD() {
+        return formatYMD(new Date());
+      }
+
+      function addCalendarDays(ymd, days) {
+        const dt = parseYMD(ymd);
+        if (!dt || !Number.isFinite(Number(days))) return null;
+        const out = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() + Math.trunc(Number(days)));
+        return formatYMD(out);
+      }
+
+      function addCalendarMonths(ymd, months) {
+        const dt = parseYMD(ymd);
+        if (!dt || !Number.isFinite(Number(months))) return null;
+        const totalMonths = Math.trunc(Number(months));
+        const targetFirst = new Date(dt.getFullYear(), dt.getMonth() + totalMonths, 1);
+        const maxDay = new Date(targetFirst.getFullYear(), targetFirst.getMonth() + 1, 0).getDate();
+        const clampedDay = Math.min(dt.getDate(), maxDay);
+        return formatYMD(new Date(targetFirst.getFullYear(), targetFirst.getMonth(), clampedDay));
+      }
+
+      function diffCalendarDays(fromYMD, toYMD) {
+        const a = parseYMD(fromYMD);
+        const b = parseYMD(toYMD);
+        if (!a || !b) return null;
+        const utcA = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+        const utcB = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+        return Math.round((utcB - utcA) / 86400000);
+      }
+
+      function formatHumanDate(ymd) {
+        const dt = parseYMD(ymd);
+        if (!dt) return '—';
+        return dt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      }
+
+      function formatCurrency(val) {
+        const n = Number(val);
+        if (!Number.isFinite(n)) return '$0.00';
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+      }
+
+      function escapeHtml(str) {
+        return String(str == null ? '' : str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function readJson(key, fallback) {
+        try {
+          const raw = localStorage.getItem(key);
+          if (!raw) return fallback;
+          const parsed = JSON.parse(raw);
+          return parsed == null ? fallback : parsed;
+        } catch (e) {
+          return fallback;
+        }
+      }
+
+      function writeJson(key, value) {
+        try {
+          localStorage.setItem(key, JSON.stringify(value));
+          return true;
+        } catch (e) {
+          showToast('Storage quota reached. Export a JSON backup in Data & Privacy.');
+          return false;
+        }
+      }
+
+      function buildSampleDataset() {
+        const t = todayYMD();
+        const nowIso = new Date().toISOString();
+        const purchases = [
+          {
+            id: 'pur_sample_1',
+            isSample: true,
+            productName: 'Northstar 27-inch 4K IPS Monitor',
+            seller: 'Boreal Tech Direct',
+            category: 'electronics',
+            purchaseType: 'purchase',
+            purchaseDate: addCalendarDays(t, -25),
+            amount: 429.00,
+            receiptRef: 'BTD-2026-44910',
+            hasReturnWindow: true,
+            returnDurationDays: 30,
+            returnExactDate: '',
+            returnPolicySource: 'seller_verified',
+            hasWarranty: true,
+            warrantyDurationValue: 24,
+            warrantyDurationUnit: 'months',
+            warrantyExactDate: '',
+            warrantyPolicySource: 'seller_verified',
+            hasDeposit: false,
+            depositDueDate: '',
+            depositCondition: '',
+            proofFile: { fileName: 'boreal-monitor-invoice-44910.pdf', fileSize: 148200, fileType: 'application/pdf', locationNote: 'Documents/Receipts/2026/boreal-monitor-invoice-44910.pdf', dataUrl: '', attachedAt: addCalendarDays(t, -25) },
+            notes: 'Serial #NS27-99481A. Intermittent upper-panel flicker noticed after 20 minutes warm-up.',
+            createdAt: nowIso,
+            updatedAt: nowIso
+          },
+          {
+            id: 'pur_sample_2',
+            isSample: true,
+            productName: 'Solace Barista Conical Burr Grinder',
+            seller: 'Hearth & Kettle Co.',
+            category: 'appliance',
+            purchaseType: 'purchase',
+            purchaseDate: addCalendarDays(t, -356),
+            amount: 185.00,
+            receiptRef: 'HK-771092',
+            hasReturnWindow: true,
+            returnDurationDays: 30,
+            returnExactDate: '',
+            returnPolicySource: 'user_estimate',
+            hasWarranty: true,
+            warrantyDurationValue: 12,
+            warrantyDurationUnit: 'months',
+            warrantyExactDate: '',
+            warrantyPolicySource: 'seller_verified',
+            hasDeposit: false,
+            depositDueDate: '',
+            depositCondition: '',
+            proofFile: { fileName: 'hearth-kettle-order-771092.pdf', fileSize: 94100, fileType: 'application/pdf', locationNote: 'Email archive + Kitchen appliance binder', dataUrl: '', attachedAt: addCalendarDays(t, -356) },
+            notes: 'Motor stalls on fine espresso setting; 12-month manufacturer warranty expires in ~9 days.',
+            createdAt: nowIso,
+            updatedAt: nowIso
+          },
+          {
+            id: 'pur_sample_3',
+            isSample: true,
+            productName: 'Crestline Fiber ONT Router Equipment Deposit',
+            seller: 'Crestline Broadband',
+            category: 'service_deposit',
+            purchaseType: 'deposit',
+            purchaseDate: addCalendarDays(t, -180),
+            amount: 120.00,
+            receiptRef: 'CB-DEP-55301',
+            hasReturnWindow: false,
+            returnDurationDays: null,
+            returnExactDate: '',
+            returnPolicySource: 'seller_verified',
+            hasWarranty: false,
+            warrantyDurationValue: null,
+            warrantyDurationUnit: 'months',
+            warrantyExactDate: '',
+            warrantyPolicySource: 'user_estimate',
+            hasDeposit: true,
+            depositDueDate: addCalendarDays(t, 4),
+            depositCondition: 'Return ONT fiber box and power supply within 14 days of service cancellation',
+            proofFile: { fileName: 'crestline-deposit-agreement.pdf', fileSize: 112400, fileType: 'application/pdf', locationNote: 'Utilities folder / Crestline account statement', dataUrl: '', attachedAt: addCalendarDays(t, -180) },
+            notes: 'Keep UPS drop-off weight receipt when returning router hardware.',
+            createdAt: nowIso,
+            updatedAt: nowIso
+          },
+          {
+            id: 'pur_sample_4',
+            isSample: true,
+            productName: 'Veridian Mesh Ergonomic Task Chair',
+            seller: 'Veridian Workspace',
+            category: 'home',
+            purchaseType: 'purchase',
+            purchaseDate: addCalendarDays(t, -21),
+            amount: 340.00,
+            receiptRef: '',
+            hasReturnWindow: true,
+            returnDurationDays: 14,
+            returnExactDate: '',
+            returnPolicySource: 'user_estimate',
+            hasWarranty: true,
+            warrantyDurationValue: 3,
+            warrantyDurationUnit: 'years',
+            warrantyExactDate: '',
+            warrantyPolicySource: 'user_estimate',
+            hasDeposit: false,
+            depositDueDate: '',
+            depositCondition: '',
+            proofFile: null,
+            notes: 'Right armrest height lock slips. Locate confirmation email from Veridian Workspace.',
+            createdAt: nowIso,
+            updatedAt: nowIso
+          },
+          {
+            id: 'pur_sample_5',
+            isSample: true,
+            productName: 'Alpine Trail 3L Waterproof Shell Jacket',
+            seller: 'Summit & Pine Outfitters',
+            category: 'apparel',
+            purchaseType: 'purchase',
+            purchaseDate: addCalendarDays(t, -45),
+            amount: 164.50,
+            receiptRef: 'SPO-99204',
+            hasReturnWindow: true,
+            returnDurationDays: 60,
+            returnExactDate: '',
+            returnPolicySource: 'seller_verified',
+            hasWarranty: false,
+            warrantyDurationValue: null,
+            warrantyDurationUnit: 'months',
+            warrantyExactDate: '',
+            warrantyPolicySource: 'user_estimate',
+            hasDeposit: false,
+            depositDueDate: '',
+            depositCondition: '',
+            proofFile: { fileName: 'summit-pine-receipt-99204.jpg', fileSize: 184000, fileType: 'image/jpeg', locationNote: 'Photos / Receipts album', dataUrl: '', attachedAt: addCalendarDays(t, -45) },
+            notes: 'Returned unworn with tags; full refund received.',
+            createdAt: nowIso,
+            updatedAt: nowIso
+          },
+          {
+            id: 'pur_sample_6',
+            isSample: true,
+            productName: 'MetroStay Short-Term Utility Security Deposit',
+            seller: 'MetroStay Property Services',
+            category: 'service_deposit',
+            purchaseType: 'deposit',
+            purchaseDate: addCalendarDays(t, -95),
+            amount: 250.00,
+            receiptRef: 'MSP-DEP-3098',
+            hasReturnWindow: false,
+            returnDurationDays: null,
+            returnExactDate: '',
+            returnPolicySource: 'seller_verified',
+            hasWarranty: false,
+            warrantyDurationValue: null,
+            warrantyDurationUnit: 'months',
+            warrantyExactDate: '',
+            warrantyPolicySource: 'user_estimate',
+            hasDeposit: true,
+            depositDueDate: addCalendarDays(t, -5),
+            depositCondition: 'Refundable within 30 days after final meter reading and key handoff',
+            proofFile: { fileName: 'metrostay-moveout-inspection.pdf', fileSize: 205000, fileType: 'application/pdf', locationNote: 'Housing / Lease Archive 2026', dataUrl: '', attachedAt: addCalendarDays(t, -35) },
+            notes: 'Signed move-out sheet shows zero balance due; disputing $35 administrative deduction.',
+            createdAt: nowIso,
+            updatedAt: nowIso
+          }
+        ];
+
+        const deadlineMeta = {
+          'ret_pur_sample_1': { actionState: 'in_progress', prepDate: addCalendarDays(t, 2), userNote: 'RMA-88210 issued; pack monitor in original foam box before carrier drop-off.', updatedAt: nowIso },
+          'ret_pur_sample_2': { actionState: 'not_applicable', prepDate: '', userNote: 'Kept grinder past 30-day retail return window.', updatedAt: nowIso },
+          'war_pur_sample_2': { actionState: 'needs_action', prepDate: addCalendarDays(t, 2), userNote: 'Record 15-second video of burr motor stalling before warranty expires.', updatedAt: nowIso },
+          'dep_pur_sample_3': { actionState: 'in_progress', prepDate: addCalendarDays(t, 1), userNote: 'Drop off fiber ONT kit at authorized shipping counter and photograph receipt.', updatedAt: nowIso },
+          'ret_pur_sample_4': { actionState: 'needs_action', prepDate: '', userNote: 'Check whether seller offers exchange exception or file under 3-year warranty.', updatedAt: nowIso },
+          'ret_pur_sample_5': { actionState: 'completed', prepDate: '', userNote: 'Return completed and refund confirmed.', updatedAt: nowIso },
+          'dep_pur_sample_6': { actionState: 'in_progress', prepDate: '', userNote: 'Submitted written request for full $250 deposit release.', updatedAt: nowIso }
+        };
+
+        const claims = [
+          {
+            id: 'clm_sample_1', isSample: true, purchaseId: 'pur_sample_1', claimType: 'return',
+            itemSummary: 'Northstar 27-inch 4K IPS Monitor', seller: 'Boreal Tech Direct',
+            purchaseDate: addCalendarDays(t, -25), receiptRef: 'BTD-2026-44910', referenceNumber: 'RMA-88210',
+            dateSubmitted: addCalendarDays(t, -2), responseDueDate: addCalendarDays(t, 5), status: 'awaiting_response',
+            amountRequested: 429.00, amountApproved: 429.00, amountReceived: 0, paymentReceived: false, dateReceived: '',
+            issueDescription: 'Intermittent horizontal flicker across upper third of screen after 20 minutes of use. Returning within verified 30-day return window.',
+            preferredResolution: 'Full refund of $429.00 to original payment method upon return inspection.',
+            letterDraft: '', letterTone: 'polite_standard', senderName: '',
+            evidenceChecklist: [
+              { id: 'ev_s1_1', label: 'Invoice / receipt reference (BTD-2026-44910)', checked: true },
+              { id: 'ev_s1_2', label: 'Short video showing upper-panel display flicker', checked: true },
+              { id: 'ev_s1_3', label: 'Photo of serial number tag (#NS27-99481A)', checked: true },
+              { id: 'ev_s1_4', label: 'Carrier drop-off receipt with tracking number', checked: false }
+            ],
+            history: [
+              { id: 'his_s1_1', date: addCalendarDays(t, -2), note: 'Return claim opened; seller issued RMA-88210.' },
+              { id: 'his_s1_2', date: addCalendarDays(t, -1), note: 'Seller pre-approved $429.00 refund pending warehouse receipt. Payout not yet received.' }
+            ],
+            createdAt: nowIso, updatedAt: nowIso
+          },
+          {
+            id: 'clm_sample_2', isSample: true, purchaseId: 'pur_sample_2', claimType: 'repair',
+            itemSummary: 'Solace Barista Conical Burr Grinder', seller: 'Hearth & Kettle Co.',
+            purchaseDate: addCalendarDays(t, -356), receiptRef: 'HK-771092', referenceNumber: '',
+            dateSubmitted: '', responseDueDate: addCalendarDays(t, 8), status: 'draft',
+            amountRequested: 0, amountApproved: 0, amountReceived: 0, paymentReceived: false, dateReceived: '',
+            issueDescription: 'Conical burr drive motor stalls under normal load prior to 12-month warranty expiration.',
+            preferredResolution: 'Authorized warranty repair or replacement unit at no charge.',
+            letterDraft: '', letterTone: 'polite_standard', senderName: '',
+            evidenceChecklist: [
+              { id: 'ev_s2_1', label: 'Order invoice HK-771092 showing purchase date', checked: true },
+              { id: 'ev_s2_2', label: 'Video demonstrating grinder motor stall on medium-fine setting', checked: false },
+              { id: 'ev_s2_3', label: 'Photo of bottom manufacture plate & batch code', checked: false }
+            ],
+            history: [{ id: 'his_s2_1', date: t, note: 'Draft warranty repair request prepared ahead of 12-month warranty deadline.' }],
+            createdAt: nowIso, updatedAt: nowIso
+          },
+          {
+            id: 'clm_sample_3', isSample: true, purchaseId: 'pur_sample_5', claimType: 'refund',
+            itemSummary: 'Alpine Trail 3L Waterproof Shell Jacket', seller: 'Summit & Pine Outfitters',
+            purchaseDate: addCalendarDays(t, -45), receiptRef: 'SPO-99204', referenceNumber: 'RET-50192',
+            dateSubmitted: addCalendarDays(t, -20), responseDueDate: '', status: 'resolved',
+            amountRequested: 164.50, amountApproved: 164.50, amountReceived: 164.50, paymentReceived: true, dateReceived: addCalendarDays(t, -12),
+            issueDescription: 'Returned unworn jacket with original retail tags attached within 60-day return policy.',
+            preferredResolution: 'Full refund of $164.50 to original payment method.',
+            letterDraft: '', letterTone: 'polite_standard', senderName: '',
+            evidenceChecklist: [
+              { id: 'ev_s3_1', label: 'Receipt SPO-99204', checked: true },
+              { id: 'ev_s3_2', label: 'Return parcel tracking delivery confirmation', checked: true },
+              { id: 'ev_s3_3', label: 'Statement credit confirmation ($164.50 received)', checked: true }
+            ],
+            history: [
+              { id: 'his_s3_1', date: addCalendarDays(t, -20), note: 'Submitted return package under RET-50192.' },
+              { id: 'his_s3_2', date: addCalendarDays(t, -15), note: 'Warehouse confirmed receipt and approved $164.50 refund.' },
+              { id: 'his_s3_3', date: addCalendarDays(t, -12), note: 'Confirmed $164.50 payout received.' }
+            ],
+            createdAt: nowIso, updatedAt: nowIso
+          },
+          {
+            id: 'clm_sample_4', isSample: true, purchaseId: 'pur_sample_6', claimType: 'deposit',
+            itemSummary: 'MetroStay Short-Term Utility Security Deposit', seller: 'MetroStay Property Services',
+            purchaseDate: addCalendarDays(t, -95), receiptRef: 'MSP-DEP-3098', referenceNumber: 'CLM-3098-D',
+            dateSubmitted: addCalendarDays(t, -4), responseDueDate: addCalendarDays(t, 3), status: 'submitted',
+            amountRequested: 250.00, amountApproved: 215.00, amountReceived: 0, paymentReceived: false, dateReceived: '',
+            issueDescription: '30-day utility deposit return window passed. Provider proposed $215.00 release with unexplained $35.00 fee despite signed zero-balance move-out report.',
+            preferredResolution: 'Release of full $250.00 refundable deposit or itemized contractual basis for $35.00 deduction.',
+            letterDraft: '', letterTone: 'firm_followup', senderName: '',
+            evidenceChecklist: [
+              { id: 'ev_s4_1', label: 'Deposit receipt MSP-DEP-3098 ($250.00)', checked: true },
+              { id: 'ev_s4_2', label: 'Signed move-out meter & key inspection form', checked: true },
+              { id: 'ev_s4_3', label: 'Written clarification request regarding $35.00 deduction', checked: true }
+            ],
+            history: [
+              { id: 'his_s4_1', date: addCalendarDays(t, -4), note: 'Filed deposit refund claim CLM-3098-D after 30-day return window elapsed.' },
+              { id: 'his_s4_2', date: addCalendarDays(t, -2), note: 'Provider indicated $215.00 approved; requested written clarification on remaining $35.00. No funds received yet.' }
+            ],
+            createdAt: nowIso, updatedAt: nowIso
+          }
+        ];
+
+        return { purchases, deadlineMeta, claims };
+      }
+
+      function ensureSeeded() {
+        if (!readJson(STORAGE_KEYS.INIT, null)) {
+          const sample = buildSampleDataset();
+          writeJson(STORAGE_KEYS.PURCHASES, sample.purchases);
+          writeJson(STORAGE_KEYS.DEADLINE_META, sample.deadlineMeta);
+          writeJson(STORAGE_KEYS.CUSTOM_DEADLINES, []);
+          writeJson(STORAGE_KEYS.CLAIMS, sample.claims);
+          writeJson(STORAGE_KEYS.INIT, { seededAt: new Date().toISOString(), version: 1 });
+        }
+      }
+
+      ensureSeeded();
+
+      /* =========================================================================
+       * AGGREGATE ALL DEADLINES ACROSS PURCHASES, CLAIMS & CUSTOM ENTRIES
+       * ========================================================================= */
+      let purchases = [];
+      let deadlineMeta = {};
+      let customDeadlines = [];
+      let claims = [];
+      let confirmCallback = null;
+
+      let uiState = {
+        typeFilter: 'all',
+        stateFilter: 'active_only',
+        sort: 'urgency',
+        search: '',
+        timelineScope: 'near',
+        focusedId: ''
+      };
+
+      function reloadStorage() {
+        purchases = readJson(STORAGE_KEYS.PURCHASES, []);
+        deadlineMeta = readJson(STORAGE_KEYS.DEADLINE_META, {});
+        customDeadlines = readJson(STORAGE_KEYS.CUSTOM_DEADLINES, []);
+        claims = readJson(STORAGE_KEYS.CLAIMS, []);
+      }
+
+      function showToast(msg) {
+        const region = document.getElementById('toastRegion');
+        const el = document.createElement('div');
+        el.className = 'toast';
+        el.textContent = msg;
+        region.appendChild(el);
+        setTimeout(function () {
+          if (el.parentNode) el.parentNode.removeChild(el);
+        }, 3500);
+      }
+
+      function deriveAllDeadlines() {
+        const t = todayYMD();
+        const items = [];
+
+        function resolveMeta(id, defaultState) {
+          const m = deadlineMeta[id] || {};
+          return {
+            actionState: m.actionState || defaultState || 'needs_action',
+            prepDate: m.prepDate || '',
+            userNote: m.userNote || ''
+          };
+        }
+
+        // 1. Purchase Return, Warranty, and Deposit deadlines
+        purchases.forEach(function (p) {
+          const missingReceipt = !p.receiptRef || !p.receiptRef.trim();
+
+          // Return Window
+          if (p.hasReturnWindow) {
+            let dueDate = null;
+            let basis = '';
+            if (p.returnExactDate && parseYMD(p.returnExactDate)) {
+              dueDate = p.returnExactDate;
+              basis = 'Exact seller return date';
+            } else if (p.returnDurationDays !== null && p.returnDurationDays !== '' && Number(p.returnDurationDays) >= 0) {
+              dueDate = addCalendarDays(p.purchaseDate, Number(p.returnDurationDays));
+              basis = p.returnDurationDays + '-day return window';
+            }
+            const daysRem = dueDate ? diffCalendarDays(t, dueDate) : null;
+            const id = 'ret_' + p.id;
+            const meta = resolveMeta(id, 'needs_action');
+            const missingReasons = [];
+            if (missingReceipt) missingReasons.push('Missing receipt reference');
+            if (!dueDate) missingReasons.push('Missing return deadline duration/date');
+
+            items.push({
+              id: id,
+              sourceKind: 'purchase',
+              purchaseId: p.id,
+              claimId: '',
+              customId: '',
+              isSample: Boolean(p.isSample),
+              type: 'return',
+              typeLabel: 'Return Window',
+              title: p.productName,
+              seller: p.seller,
+              amount: Number(p.amount) || 0,
+              startDate: p.purchaseDate,
+              dueDate: dueDate,
+              daysRemaining: daysRem,
+              policySource: p.returnPolicySource || 'user_estimate',
+              basisText: basis || 'Duration missing',
+              receiptRef: p.receiptRef || '',
+              missingReasons: missingReasons,
+              actionState: meta.actionState,
+              prepDate: meta.prepDate,
+              prepDaysRemaining: meta.prepDate ? diffCalendarDays(t, meta.prepDate) : null,
+              userNote: meta.userNote
+            });
+          }
+
+          // Warranty Period
+          if (p.hasWarranty) {
+            let dueDate = null;
+            let basis = '';
+            if (p.warrantyExactDate && parseYMD(p.warrantyExactDate)) {
+              dueDate = p.warrantyExactDate;
+              basis = 'Exact warranty expiration';
+            } else if (p.warrantyDurationValue !== null && p.warrantyDurationValue !== '' && Number(p.warrantyDurationValue) > 0) {
+              const v = Number(p.warrantyDurationValue);
+              if (p.warrantyDurationUnit === 'days') dueDate = addCalendarDays(p.purchaseDate, v);
+              else if (p.warrantyDurationUnit === 'years') dueDate = addCalendarMonths(p.purchaseDate, v * 12);
+              else dueDate = addCalendarMonths(p.purchaseDate, v);
+              basis = v + ' ' + p.warrantyDurationUnit + ' warranty';
+            }
+            const daysRem = dueDate ? diffCalendarDays(t, dueDate) : null;
+            const id = 'war_' + p.id;
+            const meta = resolveMeta(id, 'needs_action');
+            const missingReasons = [];
+            if (missingReceipt) missingReasons.push('Missing receipt reference');
+            if (!dueDate) missingReasons.push('Missing warranty end date');
+
+            items.push({
+              id: id,
+              sourceKind: 'purchase',
+              purchaseId: p.id,
+              claimId: '',
+              customId: '',
+              isSample: Boolean(p.isSample),
+              type: 'warranty',
+              typeLabel: 'Warranty Coverage',
+              title: p.productName,
+              seller: p.seller,
+              amount: Number(p.amount) || 0,
+              startDate: p.purchaseDate,
+              dueDate: dueDate,
+              daysRemaining: daysRem,
+              policySource: p.warrantyPolicySource || 'user_estimate',
+              basisText: basis || 'Warranty term missing',
+              receiptRef: p.receiptRef || '',
+              missingReasons: missingReasons,
+              actionState: meta.actionState,
+              prepDate: meta.prepDate,
+              prepDaysRemaining: meta.prepDate ? diffCalendarDays(t, meta.prepDate) : null,
+              userNote: meta.userNote
+            });
+          }
+
+          // Deposit Refund Deadline
+          if (p.hasDeposit || p.purchaseType === 'deposit') {
+            const dueDate = p.depositDueDate && parseYMD(p.depositDueDate) ? p.depositDueDate : null;
+            const daysRem = dueDate ? diffCalendarDays(t, dueDate) : null;
+            const id = 'dep_' + p.id;
+            const meta = resolveMeta(id, 'needs_action');
+            const missingReasons = [];
+            if (missingReceipt) missingReasons.push('Missing deposit receipt ref');
+            if (!dueDate) missingReasons.push('Missing deposit due date');
+
+            items.push({
+              id: id,
+              sourceKind: 'purchase',
+              purchaseId: p.id,
+              claimId: '',
+              customId: '',
+              isSample: Boolean(p.isSample),
+              type: 'deposit',
+              typeLabel: 'Refundable Deposit',
+              title: p.productName,
+              seller: p.seller,
+              amount: Number(p.amount) || 0,
+              startDate: p.purchaseDate,
+              dueDate: dueDate,
+              daysRemaining: daysRem,
+              policySource: p.returnPolicySource || 'seller_verified',
+              basisText: p.depositCondition || 'Deposit return / refund condition',
+              receiptRef: p.receiptRef || '',
+              missingReasons: missingReasons,
+              actionState: meta.actionState,
+              prepDate: meta.prepDate,
+              prepDaysRemaining: meta.prepDate ? diffCalendarDays(t, meta.prepDate) : null,
+              userNote: meta.userNote
+            });
+          }
+        });
+
+        // 2. Claim Refund / Response Follow-Up Deadlines
+        claims.forEach(function (c) {
+          const isClosed = c.status === 'resolved' || c.status === 'closed' || c.status === 'rejected';
+          let dueDate = c.responseDueDate && parseYMD(c.responseDueDate) ? c.responseDueDate : null;
+          if (!dueDate && c.dateSubmitted && parseYMD(c.dateSubmitted) && !isClosed) {
+            dueDate = addCalendarDays(c.dateSubmitted, 14);
+          }
+          if (!dueDate && isClosed) return;
+
+          const id = 'clm_' + c.id;
+          const defaultState = c.paymentReceived || c.status === 'resolved' ? 'completed' : (c.status === 'draft' ? 'needs_action' : 'in_progress');
+          const meta = resolveMeta(id, defaultState);
+          const missingReasons = [];
+          if (c.status !== 'draft' && (!c.referenceNumber || !c.referenceNumber.trim())) {
+            missingReasons.push('Missing seller RMA / claim reference #');
+          }
+          if (!dueDate) {
+            missingReasons.push('No target response date set');
+          }
+
+          const mappedType = c.claimType === 'deposit' ? 'deposit' : 'refund';
+          items.push({
+            id: id,
+            sourceKind: 'claim',
+            purchaseId: c.purchaseId || '',
+            claimId: c.id,
+            customId: '',
+            isSample: Boolean(c.isSample),
+            type: mappedType,
+            typeLabel: c.claimType === 'deposit' ? 'Deposit Claim Follow-Up' : 'Refund / Claim Follow-Up',
+            title: c.itemSummary + ' (' + c.claimType.toUpperCase() + ' Claim)',
+            seller: c.seller,
+            amount: Number(c.amountRequested) || 0,
+            startDate: c.dateSubmitted || c.purchaseDate || '',
+            dueDate: dueDate,
+            daysRemaining: dueDate ? diffCalendarDays(t, dueDate) : null,
+            policySource: 'seller_verified',
+            basisText: 'Claim status: ' + c.status.replace('_', ' '),
+            receiptRef: c.referenceNumber || c.receiptRef || '',
+            missingReasons: missingReasons,
+            actionState: meta.actionState,
+            prepDate: meta.prepDate,
+            prepDaysRemaining: meta.prepDate ? diffCalendarDays(t, meta.prepDate) : null,
+            userNote: meta.userNote
+          });
+        });
+
+        // 3. Standalone Custom Deadlines
+        customDeadlines.forEach(function (cd) {
+          const id = 'cst_' + cd.id;
+          const dueDate = cd.dueDate && parseYMD(cd.dueDate) ? cd.dueDate : null;
+          const meta = resolveMeta(id, 'needs_action');
+          const missingReasons = [];
+          if (!cd.receiptRef || !cd.receiptRef.trim()) missingReasons.push('Missing reference #');
+          if (!dueDate) missingReasons.push('Missing deadline date');
+
+          const labelMap = {
+            return: 'Return Window',
+            warranty: 'Warranty Coverage',
+            refund: 'Refund Follow-Up',
+            deposit: 'Refundable Deposit'
+          };
+
+          items.push({
+            id: id,
+            sourceKind: 'custom',
+            purchaseId: '',
+            claimId: '',
+            customId: cd.id,
+            isSample: Boolean(cd.isSample),
+            type: cd.type || 'refund',
+            typeLabel: labelMap[cd.type] || 'Custom Deadline',
+            title: cd.title,
+            seller: cd.seller,
+            amount: Number(cd.amount) || 0,
+            startDate: cd.startDate || '',
+            dueDate: dueDate,
+            daysRemaining: dueDate ? diffCalendarDays(t, dueDate) : null,
+            policySource: cd.policySource || 'user_estimate',
+            basisText: cd.notes || 'Standalone logged deadline',
+            receiptRef: cd.receiptRef || '',
+            missingReasons: missingReasons,
+            actionState: meta.actionState,
+            prepDate: meta.prepDate,
+            prepDaysRemaining: meta.prepDate ? diffCalendarDays(t, meta.prepDate) : null,
+            userNote: meta.userNote
+          });
+        });
+
+        return items;
+      }
+
+      /* =========================================================================
+       * RENDER SUMMARY, QUEUE & EVENT TIMELINE
+       * ========================================================================= */
+      function isOpenState(state) {
+        return state === 'needs_action' || state === 'in_progress';
+      }
+
+      function renderSummary(allItems) {
+        let overdueCount = 0;
+        let dueSoonCount = 0;
+        let prepActiveCount = 0;
+        let missingInfoCount = 0;
+        let resolvedCount = 0;
+        let inProgressCount = 0;
+
+        allItems.forEach(function (item) {
+          const open = isOpenState(item.actionState);
+          if (item.actionState === 'in_progress') inProgressCount++;
+          if (!open) {
+            resolvedCount++;
+          } else {
+            if (item.daysRemaining !== null && item.daysRemaining < 0) overdueCount++;
+            if (item.daysRemaining !== null && item.daysRemaining >= 0 && item.daysRemaining <= 14) dueSoonCount++;
+            if (item.prepDate) prepActiveCount++;
+          }
+          if (item.missingReasons.length > 0 && open) {
+            missingInfoCount++;
+          }
+        });
+
+        const ovEl = document.getElementById('statOverdue');
+        ovEl.textContent = String(overdueCount);
+        ovEl.style.color = overdueCount > 0 ? 'var(--red)' : 'var(--text-primary)';
+
+        const soonEl = document.getElementById('statDueSoon');
+        soonEl.textContent = String(dueSoonCount);
+        soonEl.style.color = dueSoonCount > 0 ? 'var(--amber)' : 'var(--text-primary)';
+
+        document.getElementById('statPrepReminders').textContent = prepActiveCount + (prepActiveCount === 1 ? ' preparation date active' : ' preparation dates active');
+
+        const missEl = document.getElementById('statMissingInfo');
+        missEl.textContent = String(missingInfoCount);
+        missEl.style.color = missingInfoCount > 0 ? 'var(--amber)' : 'var(--text-primary)';
+
+        document.getElementById('statResolvedCount').textContent = String(resolvedCount);
+        document.getElementById('statInProgressCount').textContent = inProgressCount + ' currently in progress';
+        document.getElementById('todayAnchorText').textContent = 'Calendar reference: ' + formatHumanDate(todayYMD());
+      }
+
+      function getFilteredAndSortedDeadlines(allItems) {
+        const q = uiState.search.trim().toLowerCase();
+
+        const filtered = allItems.filter(function (item) {
+          if (uiState.typeFilter !== 'all' && item.type !== uiState.typeFilter) return false;
+
+          const open = isOpenState(item.actionState);
+          if (uiState.stateFilter === 'active_only' && !open) return false;
+          if (uiState.stateFilter === 'overdue_flagged') {
+            const isOverdue = open && item.daysRemaining !== null && item.daysRemaining < 0;
+            const hasMissing = open && item.missingReasons.length > 0;
+            if (!isOverdue && !hasMissing) return false;
+          }
+          if (uiState.stateFilter === 'prep_due' && !item.prepDate) return false;
+          if (uiState.stateFilter === 'needs_action' && item.actionState !== 'needs_action') return false;
+          if (uiState.stateFilter === 'in_progress' && item.actionState !== 'in_progress') return false;
+          if (uiState.stateFilter === 'completed' && item.actionState !== 'completed') return false;
+
+          if (q) {
+            const hay = [item.title, item.seller, item.typeLabel, item.receiptRef, item.basisText, item.userNote].join(' ').toLowerCase();
+            if (hay.indexOf(q) === -1) return false;
+          }
+          return true;
+        });
+
+        filtered.sort(function (a, b) {
+          if (uiState.sort === 'amount_desc') return b.amount - a.amount;
+          if (uiState.sort === 'seller_asc') return a.seller.localeCompare(b.seller);
+          if (uiState.sort === 'prep_asc') {
+            const pa = a.prepDaysRemaining !== null ? a.prepDaysRemaining : 999999;
+            const pb = b.prepDaysRemaining !== null ? b.prepDaysRemaining : 999999;
+            if (pa !== pb) return pa - pb;
+          }
+          // Default urgency: open items before closed, missing/overdue/soonest first
+          const openA = isOpenState(a.actionState) ? 0 : 1;
+          const openB = isOpenState(b.actionState) ? 0 : 1;
+          if (openA !== openB) return openA - openB;
+          const da = a.daysRemaining !== null ? a.daysRemaining : -9999;
+          const db = b.daysRemaining !== null ? b.daysRemaining : -9999;
+          return da - db;
+        });
+
+        return filtered;
+      }
+
+      function formatUrgencyReadout(item) {
+        if (item.actionState === 'completed') {
+          return '<div class="urgency-primary state-ok">&#10003; Completed</div><div class="urgency-date">Deadline ' + escapeHtml(formatHumanDate(item.dueDate)) + '</div>';
+        }
+        if (item.actionState === 'not_applicable') {
+          return '<div class="urgency-primary state-neutral">Not Applicable</div><div class="urgency-date">' + escapeHtml(formatHumanDate(item.dueDate)) + '</div>';
+        }
+        if (item.daysRemaining === null) {
+          return '<div class="urgency-primary state-overdue">! Date Missing</div><div class="urgency-date">Set exact date</div>';
+        }
+        if (item.daysRemaining < 0) {
+          const past = Math.abs(item.daysRemaining);
+          return '<div class="urgency-primary state-overdue">! ' + past + (past === 1 ? ' day overdue' : ' days overdue') + '</div><div class="urgency-date">Passed ' + escapeHtml(formatHumanDate(item.dueDate)) + '</div>';
+        }
+        if (item.daysRemaining === 0) {
+          return '<div class="urgency-primary state-overdue">! Due Today</div><div class="urgency-date">' + escapeHtml(formatHumanDate(item.dueDate)) + '</div>';
+        }
+        if (item.daysRemaining <= 14) {
+          return '<div class="urgency-primary state-urgent">&#9650; ' + item.daysRemaining + (item.daysRemaining === 1 ? ' day left' : ' days left') + '</div><div class="urgency-date">Due ' + escapeHtml(formatHumanDate(item.dueDate)) + '</div>';
+        }
+        return '<div class="urgency-primary state-ok">' + item.daysRemaining + ' days left</div><div class="urgency-date">Due ' + escapeHtml(formatHumanDate(item.dueDate)) + '</div>';
+      }
+
+      function renderTimeline(allItems) {
+        const container = document.getElementById('timelineContainer');
+        const t = todayYMD();
+        const events = [
+          {
+            date: t,
+            diff: 0,
+            kind: 'today',
+            label: 'Today (' + formatHumanDate(t) + ')',
+            sub: 'Current calendar reference',
+            targetId: ''
+          }
+        ];
+
+        allItems.forEach(function (item) {
+          if (item.actionState === 'not_applicable') return;
+
+          if (item.prepDate && parseYMD(item.prepDate) && isOpenState(item.actionState)) {
+            events.push({
+              date: item.prepDate,
+              diff: diffCalendarDays(t, item.prepDate),
+              kind: 'prep',
+              label: 'Prep: ' + item.title,
+              sub: item.userNote || ('Prepare ahead of ' + item.typeLabel.toLowerCase()),
+              targetId: item.id
+            });
+          }
+
+          if (item.dueDate && parseYMD(item.dueDate)) {
+            events.push({
+              date: item.dueDate,
+              diff: diffCalendarDays(t, item.dueDate),
+              kind: item.actionState === 'completed' ? 'done' : 'due',
+              label: item.typeLabel + ': ' + item.title,
+              sub: item.seller + ' · ' + (item.actionState === 'completed' ? 'Completed' : formatCurrency(item.amount)),
+              targetId: item.id
+            });
+          }
+        });
+
+        const filteredEvents = events.filter(function (ev) {
+          if (ev.kind === 'today') return true;
+          if (uiState.timelineScope === 'near') {
+            return ev.diff >= -14 && ev.diff <= 45;
+          }
+          if (uiState.timelineScope === 'all_upcoming') {
+            return ev.diff >= 0;
+          }
+          return true;
+        });
+
+        filteredEvents.sort(function (a, b) {
+          if (a.date !== b.date) return a.date.localeCompare(b.date);
+          if (a.kind === 'today') return -1;
+          if (b.kind === 'today') return 1;
+          return 0;
+        });
+
+        if (filteredEvents.length <= 1) {
+          container.innerHTML = '<div style="color:var(--text-muted); font-size:0.84375rem; padding:12px 0;">No milestones within this timeline horizon. Switch to "Full Chronology" or add purchases and preparation dates.</div>';
+          return;
+        }
+
+        container.innerHTML = filteredEvents.map(function (ev) {
+          let cls = 'tl-ok';
+          if (ev.kind === 'today') cls = 'tl-today';
+          else if (ev.kind === 'done') cls = 'tl-ok';
+          else if (ev.diff < 0) cls = 'tl-overdue';
+          else if (ev.diff <= 14) cls = 'tl-urgent';
+
+          return '<div class="timeline-item ' + cls + '" data-focus-id="' + escapeHtml(ev.targetId) + '" tabindex="0" role="button" aria-label="Focus ' + escapeHtml(ev.label) + '">' +
+            '<span class="timeline-marker" aria-hidden="true"></span>' +
+            '<div class="timeline-date">' + escapeHtml(formatHumanDate(ev.date)) + (ev.kind !== 'today' ? (' · ' + (ev.diff === 0 ? 'Today' : (ev.diff < 0 ? Math.abs(ev.diff) + 'd ago' : 'in ' + ev.diff + 'd'))) : '') + '</div>' +
+            '<div class="timeline-label">' + escapeHtml(ev.label) + '</div>' +
+            '<div class="timeline-sub">' + escapeHtml(ev.sub) + '</div>' +
+          '</div>';
+        }).join('');
+      }
+
+      function renderAll() {
+        reloadStorage();
+        const allItems = deriveAllDeadlines();
+        renderSummary(allItems);
+        renderTimeline(allItems);
+
+        const rows = getFilteredAndSortedDeadlines(allItems);
+        const listEl = document.getElementById('deadlineListContainer');
+        const emptyEl = document.getElementById('deadlineEmptyState');
+        const resetBtn = document.getElementById('resetDeadlineFiltersBtn');
+
+        const filtersModified = uiState.typeFilter !== 'all' || uiState.stateFilter !== 'active_only' || uiState.search.trim() !== '';
+        resetBtn.style.display = filtersModified ? 'inline-flex' : 'none';
+        document.getElementById('deadlineResultsText').textContent = 'Showing ' + rows.length + ' of ' + allItems.length + ' tracked deadlines';
+
+        if (rows.length === 0) {
+          listEl.innerHTML = '';
+          emptyEl.style.display = 'block';
+          return;
+        }
+        emptyEl.style.display = 'none';
+
+        listEl.innerHTML = rows.map(function (item) {
+          const policySpan = item.policySource === 'seller_verified'
+            ? '<span style="color:var(--green); font-weight:500;">Seller-verified policy</span>'
+            : '<span>User-entered estimate</span>';
+
+          const metaParts = [
+            '<span>' + escapeHtml(item.typeLabel) + '</span>',
+            '<span class="meta-sep">·</span>',
+            '<span>' + escapeHtml(item.seller) + '</span>',
+            '<span class="meta-sep">·</span>',
+            '<span class="tabular">' + escapeHtml(formatCurrency(item.amount)) + '</span>',
+            '<span class="meta-sep">·</span>',
+            policySpan
+          ];
+          if (item.receiptRef) {
+            metaParts.push('<span class="meta-sep">·</span><span class="mono">Ref: ' + escapeHtml(item.receiptRef) + '</span>');
+          }
+          if (item.isSample) {
+            metaParts.push('<span class="meta-sep">·</span><span class="sample-tag">Sample</span>');
+          }
+
+          // Flags (missing info, prep reminder, user note)
+          const flagHtmlParts = [];
+          item.missingReasons.forEach(function (reason) {
+            flagHtmlParts.push('<span class="flag-item state-overdue">! ' + escapeHtml(reason) + '</span>');
+          });
+          if (item.prepDate) {
+            const pDiff = item.prepDaysRemaining;
+            const prepClass = pDiff !== null && pDiff <= 0 && isOpenState(item.actionState) ? 'state-urgent' : 'state-ok';
+            const prepTiming = pDiff === 0 ? 'Prep today' : (pDiff < 0 ? 'Prep date passed (' + formatHumanDate(item.prepDate) + ')' : 'Prep on ' + formatHumanDate(item.prepDate) + ' (in ' + pDiff + 'd)');
+            flagHtmlParts.push('<span class="flag-item ' + prepClass + '">&#9200; ' + escapeHtml(prepTiming) + '</span>');
+          }
+          if (item.userNote) {
+            flagHtmlParts.push('<span class="flag-item" style="color:var(--text-secondary);">Note: ' + escapeHtml(item.userNote) + '</span>');
+          }
+
+          // Contextual actions
+          let linkButtons = '<button type="button" class="btn btn-ghost" data-action="set-prep" data-id="' + escapeHtml(item.id) + '">' + (item.prepDate ? 'Edit Prep Date' : 'Set Prep Date') + '</button>';
+
+          if (item.sourceKind === 'purchase') {
+            if (item.missingReasons.length > 0) {
+              linkButtons += '<a href="claimback.html?edit=' + encodeURIComponent(item.purchaseId) + '" class="btn btn-ghost" style="color:var(--amber);">Fix Missing Info</a>';
+            } else {
+              linkButtons += '<a href="claimback.html?highlight=' + encodeURIComponent(item.purchaseId) + '" class="btn btn-ghost">View Purchase</a>';
+            }
+            const suggestedClaimType = item.type === 'warranty' ? 'repair' : (item.type === 'deposit' ? 'deposit' : 'return');
+            linkButtons += '<a href="recovery-center.html?newClaimFor=' + encodeURIComponent(item.purchaseId) + '&type=' + encodeURIComponent(suggestedClaimType) + '" class="btn btn-ghost">Prepare Claim</a>';
+          } else if (item.sourceKind === 'claim') {
+            linkButtons += '<a href="recovery-center.html?claimId=' + encodeURIComponent(item.claimId) + '" class="btn btn-ghost">Open Claim</a>';
+          } else if (item.sourceKind === 'custom') {
+            linkButtons += '<button type="button" class="btn btn-ghost" style="color:var(--red);" data-action="delete-custom" data-custom-id="' + escapeHtml(item.customId) + '">Delete</button>';
+          }
+
+          const focusedCls = uiState.focusedId === item.id ? ' focused' : '';
+
+          return '<article class="deadline-row' + focusedCls + '" id="dl_' + escapeHtml(item.id) + '">' +
+            '<div class="deadline-top">' +
+              '<div>' +
+                '<h3 class="deadline-title">' + escapeHtml(item.title) + '</h3>' +
+                '<div class="meta-line">' + metaParts.join('') + '</div>' +
+                '<div class="meta-line" style="margin-top:2px;"><span>' + escapeHtml(item.basisText) + '</span></div>' +
+              '</div>' +
+              '<div class="urgency-readout">' + formatUrgencyReadout(item) + '</div>' +
+            '</div>' +
+            (flagHtmlParts.length > 0 ? '<div class="deadline-flags">' + flagHtmlParts.join('') + '</div>' : '') +
+            '<div class="deadline-controls">' +
+              '<div style="display:flex; align-items:center; gap:8px;">' +
+                '<label class="meta-line" for="st_' + escapeHtml(item.id) + '">Status:</label>' +
+                '<select id="st_' + escapeHtml(item.id) + '" class="status-select" data-action="change-state" data-id="' + escapeHtml(item.id) + '">' +
+                  '<option value="needs_action"' + (item.actionState === 'needs_action' ? ' selected' : '') + '>Needs Action</option>' +
+                  '<option value="in_progress"' + (item.actionState === 'in_progress' ? ' selected' : '') + '>In Progress</option>' +
+                  '<option value="completed"' + (item.actionState === 'completed' ? ' selected' : '') + '>Completed</option>' +
+                  '<option value="not_applicable"' + (item.actionState === 'not_applicable' ? ' selected' : '') + '>Not Applicable</option>' +
+                '</select>' +
+              '</div>' +
+              '<div class="action-links">' + linkButtons + '</div>' +
+            '</div>' +
+          '</article>';
+        }).join('');
+      }
+
+      /* =========================================================================
+       * WORKFLOW MUTATIONS: STATUS, PREP DATE, CUSTOM DEADLINE, CSV EXPORT
+       * ========================================================================= */
+      function updateDeadlineStatus(id, newState) {
+        const existing = deadlineMeta[id] || { prepDate: '', userNote: '' };
+        deadlineMeta[id] = {
+          actionState: newState,
+          prepDate: existing.prepDate || '',
+          userNote: existing.userNote || '',
+          updatedAt: new Date().toISOString()
+        };
+        if (writeJson(STORAGE_KEYS.DEADLINE_META, deadlineMeta)) {
+          renderAll();
+          const labels = {
+            needs_action: 'Needs Action',
+            in_progress: 'In Progress',
+            completed: 'Completed',
+            not_applicable: 'Not Applicable'
+          };
+          showToast('Deadline marked as ' + (labels[newState] || newState) + '.');
+        }
+      }
+
+      function openPrepModal(id) {
+        const all = deriveAllDeadlines();
+        const item = all.find(function (x) { return x.id === id; });
+        if (!item) return;
+
+        document.getElementById('errPrepDate').classList.remove('visible');
+        document.getElementById('prepDeadlineIdInput').value = item.id;
+        document.getElementById('prepMaxDateInput').value = item.dueDate || '';
+        document.getElementById('prepMinDateInput').value = item.startDate || '';
+        document.getElementById('prepItemSummary').textContent = item.title + ' · ' + item.typeLabel;
+        document.getElementById('prepDueDateSummary').textContent = item.dueDate
+          ? ('Target deadline: ' + formatHumanDate(item.dueDate) + (item.startDate ? ' · Start date: ' + formatHumanDate(item.startDate) : ''))
+          : 'Target deadline not yet specified';
+        document.getElementById('prepDateInput').value = item.prepDate || '';
+        document.getElementById('prepNoteInput').value = item.userNote || '';
+        document.getElementById('prepModalBackdrop').classList.add('open');
+        document.getElementById('prepDateInput').focus();
+      }
+
+      document.getElementById('prepPresetsRow').addEventListener('click', function (e) {
+        const btn = e.target.closest('[data-offset]');
+        if (!btn) return;
+        const offset = btn.getAttribute('data-offset');
+        if (offset === 'clear') {
+          document.getElementById('prepDateInput').value = '';
+          return;
+        }
+        const due = document.getElementById('prepMaxDateInput').value;
+        if (!parseYMD(due)) {
+          showToast('Set a target deadline date on this record first.');
+          return;
+        }
+        const minDate = document.getElementById('prepMinDateInput').value;
+        let candidate = addCalendarDays(due, Number(offset));
+        if (minDate && parseYMD(minDate) && diffCalendarDays(minDate, candidate) < 0) {
+          candidate = minDate;
+        }
+        document.getElementById('prepDateInput').value = candidate;
+      });
+
+      document.getElementById('prepForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const id = document.getElementById('prepDeadlineIdInput').value;
+        const maxDate = document.getElementById('prepMaxDateInput').value;
+        const minDate = document.getElementById('prepMinDateInput').value;
+        const prepVal = document.getElementById('prepDateInput').value;
+        const noteVal = document.getElementById('prepNoteInput').value.trim();
+        const errEl = document.getElementById('errPrepDate');
+        errEl.classList.remove('visible');
+
+        if (prepVal) {
+          if (!parseYMD(prepVal)) {
+            errEl.classList.add('visible');
+            return;
+          }
+          if (maxDate && parseYMD(maxDate) && diffCalendarDays(prepVal, maxDate) < 0) {
+            errEl.textContent = 'Preparation date cannot be after the deadline (' + formatHumanDate(maxDate) + ').';
+            errEl.classList.add('visible');
+            return;
+          }
+          if (minDate && parseYMD(minDate) && diffCalendarDays(minDate, prepVal) < 0) {
+            errEl.textContent = 'Preparation date cannot precede the purchase/start date (' + formatHumanDate(minDate) + ').';
+            errEl.classList.add('visible');
+            return;
+          }
+        }
+
+        const existing = deadlineMeta[id] || { actionState: 'needs_action' };
+        deadlineMeta[id] = {
+          actionState: existing.actionState || 'needs_action',
+          prepDate: prepVal || '',
+          userNote: noteVal,
+          updatedAt: new Date().toISOString()
+        };
+        if (writeJson(STORAGE_KEYS.DEADLINE_META, deadlineMeta)) {
+          document.getElementById('prepModalBackdrop').classList.remove('open');
+          uiState.focusedId = id;
+          renderAll();
+          showToast(prepVal ? 'Preparation date saved (' + formatHumanDate(prepVal) + ').' : 'Preparation note updated.');
+        }
+      });
+
+      // Custom standalone deadline form
+      function openCustomModal() {
+        document.getElementById('customDeadlineForm').reset();
+        document.querySelectorAll('#customDeadlineForm .form-error').forEach(function (el) { el.classList.remove('visible'); });
+        document.getElementById('customStartDateInput').value = todayYMD();
+        document.getElementById('customDueDateInput').value = addCalendarDays(todayYMD(), 14);
+        document.getElementById('customModalBackdrop').classList.add('open');
+        document.getElementById('customTitleInput').focus();
+      }
+
+      document.getElementById('customDeadlineForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        document.querySelectorAll('#customDeadlineForm .form-error').forEach(function (el) { el.classList.remove('visible'); });
+        let valid = true;
+
+        const title = document.getElementById('customTitleInput').value.trim();
+        const type = document.getElementById('customTypeInput').value;
+        const seller = document.getElementById('customSellerInput').value.trim();
+        const startDate = document.getElementById('customStartDateInput').value;
+        const dueDate = document.getElementById('customDueDateInput').value;
+        const amountRaw = document.getElementById('customAmountInput').value;
+        const amount = amountRaw === '' ? 0 : Number(amountRaw);
+        const receiptRef = document.getElementById('customRefInput').value.trim();
+        const policySource = document.getElementById('customPolicySourceInput').value;
+        const notes = document.getElementById('customNotesInput').value.trim();
+
+        if (!title) { document.getElementById('errCustomTitle').classList.add('visible'); valid = false; }
+        if (!seller) { document.getElementById('errCustomSeller').classList.add('visible'); valid = false; }
+        if (!parseYMD(dueDate) || (startDate && parseYMD(startDate) && diffCalendarDays(startDate, dueDate) < 0)) {
+          document.getElementById('errCustomDue').classList.add('visible');
+          valid = false;
+        }
+        if (!Number.isFinite(amount) || amount < 0) {
+          document.getElementById('errCustomAmount').classList.add('visible');
+          valid = false;
+        }
+        if (!valid) return;
+
+        const newItem = {
+          id: 'cd_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+          isSample: false,
+          type: type,
+          title: title,
+          seller: seller,
+          startDate: startDate || '',
+          dueDate: dueDate,
+          amount: Math.round(amount * 100) / 100,
+          receiptRef: receiptRef,
+          policySource: policySource,
+          notes: notes
+        };
+        customDeadlines.unshift(newItem);
+        if (writeJson(STORAGE_KEYS.CUSTOM_DEADLINES, customDeadlines)) {
+          document.getElementById('customModalBackdrop').classList.remove('open');
+          uiState.focusedId = 'cst_' + newItem.id;
+          renderAll();
+          showToast('Standalone deadline added to radar.');
+        }
+      });
+
+      function exportDeadlinesCsv() {
+        const all = deriveAllDeadlines();
+        const rows = getFilteredAndSortedDeadlines(all);
+        if (rows.length === 0) {
+          showToast('No deadlines to export.');
+          return;
+        }
+        function csvCell(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
+        const headers = ['Title', 'Category', 'Seller', 'Due Date', 'Days Remaining', 'Workflow Status', 'Preparation Date', 'Amount (USD)', 'Policy Source', 'Reference', 'Missing Info Flags', 'Preparation Note'];
+        const lines = [headers.map(csvCell).join(',')];
+        rows.forEach(function (r) {
+          lines.push([
+            r.title,
+            r.typeLabel,
+            r.seller,
+            r.dueDate || 'Missing',
+            r.daysRemaining !== null ? r.daysRemaining : 'Missing',
+            r.actionState,
+            r.prepDate || '',
+            r.amount.toFixed(2),
+            r.policySource,
+            r.receiptRef || '',
+            r.missingReasons.join('; '),
+            r.userNote || ''
+          ].map(csvCell).join(','));
+        });
+        const blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'claimback-deadlines-' + todayYMD() + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Exported ' + rows.length + ' deadlines to CSV.');
+      }
+
+      /* =========================================================================
+       * EVENT WIRING
+       * ========================================================================= */
+      document.getElementById('mobileMenuBtn').addEventListener('click', function () {
+        const panel = document.getElementById('mobileNavPanel');
+        const open = panel.classList.toggle('open');
+        this.setAttribute('aria-expanded', String(open));
+      });
+
+      document.getElementById('topAddDeadlineBtn').addEventListener('click', openCustomModal);
+      document.getElementById('emptyAddCustomBtn').addEventListener('click', openCustomModal);
+      document.getElementById('closeCustomModalBtn').addEventListener('click', function () { document.getElementById('customModalBackdrop').classList.remove('open'); });
+      document.getElementById('cancelCustomModalBtn').addEventListener('click', function () { document.getElementById('customModalBackdrop').classList.remove('open'); });
+
+      document.getElementById('closePrepModalBtn').addEventListener('click', function () { document.getElementById('prepModalBackdrop').classList.remove('open'); });
+      document.getElementById('cancelPrepModalBtn').addEventListener('click', function () { document.getElementById('prepModalBackdrop').classList.remove('open'); });
+
+      document.querySelectorAll('.seg-btn[data-type]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          document.querySelectorAll('.seg-btn[data-type]').forEach(function (b) { b.classList.remove('active'); });
+          this.classList.add('active');
+          uiState.typeFilter = this.getAttribute('data-type');
+          renderAll();
+        });
+      });
+
+      document.getElementById('stateFilterSelect').addEventListener('change', function () {
+        uiState.stateFilter = this.value;
+        renderAll();
+      });
+
+      document.getElementById('sortDeadlinesSelect').addEventListener('change', function () {
+        uiState.sort = this.value;
+        renderAll();
+      });
+
+      document.getElementById('deadlineSearchInput').addEventListener('input', function () {
+        uiState.search = this.value;
+        renderAll();
+      });
+
+      document.getElementById('timelineScopeSelect').addEventListener('change', function () {
+        uiState.timelineScope = this.value;
+        renderAll();
+      });
+
+      function resetAllFilters() {
+        uiState.typeFilter = 'all';
+        uiState.stateFilter = 'all';
+        uiState.search = '';
+        document.getElementById('stateFilterSelect').value = 'all';
+        document.getElementById('deadlineSearchInput').value = '';
+        document.querySelectorAll('.seg-btn[data-type]').forEach(function (b) {
+          b.classList.toggle('active', b.getAttribute('data-type') === 'all');
+        });
+        renderAll();
+      }
+
+      document.getElementById('resetDeadlineFiltersBtn').addEventListener('click', function () {
+        uiState.typeFilter = 'all';
+        uiState.stateFilter = 'active_only';
+        uiState.search = '';
+        document.getElementById('stateFilterSelect').value = 'active_only';
+        document.getElementById('deadlineSearchInput').value = '';
+        document.querySelectorAll('.seg-btn[data-type]').forEach(function (b) {
+          b.classList.toggle('active', b.getAttribute('data-type') === 'all');
+        });
+        renderAll();
+      });
+      document.getElementById('emptyResetFiltersBtn').addEventListener('click', resetAllFilters);
+
+      // Delegated events on Deadline Queue
+      document.getElementById('deadlineListContainer').addEventListener('change', function (e) {
+        const sel = e.target.closest('[data-action="change-state"]');
+        if (!sel) return;
+        updateDeadlineStatus(sel.getAttribute('data-id'), sel.value);
+      });
+
+      document.getElementById('deadlineListContainer').addEventListener('click', function (e) {
+        const prepBtn = e.target.closest('[data-action="set-prep"]');
+        if (prepBtn) {
+          openPrepModal(prepBtn.getAttribute('data-id'));
+          return;
+        }
+        const delBtn = e.target.closest('[data-action="delete-custom"]');
+        if (delBtn) {
+          const cid = delBtn.getAttribute('data-custom-id');
+          const found = customDeadlines.find(function (x) { return x.id === cid; });
+          if (!found) return;
+          document.getElementById('confirmModalTitle').textContent = 'Delete Custom Deadline';
+          document.getElementById('confirmModalMessage').textContent = 'Remove standalone deadline "' + found.title + '"?';
+          document.getElementById('confirmActionBtn').textContent = 'Delete';
+          confirmCallback = function () {
+            customDeadlines = customDeadlines.filter(function (x) { return x.id !== cid; });
+            delete deadlineMeta['cst_' + cid];
+            writeJson(STORAGE_KEYS.CUSTOM_DEADLINES, customDeadlines);
+            writeJson(STORAGE_KEYS.DEADLINE_META, deadlineMeta);
+            renderAll();
+            showToast('Custom deadline deleted.');
+          };
+          document.getElementById('confirmModalBackdrop').classList.add('open');
+        }
+      });
+
+      // Timeline click -> focus item in queue
+      function focusDeadlineFromTimeline(targetId) {
+        if (!targetId) return;
+        uiState.focusedId = targetId;
+        const el = document.getElementById('dl_' + targetId);
+        if (!el) {
+          // Switch filter to All so the clicked milestone is visible
+          uiState.typeFilter = 'all';
+          uiState.stateFilter = 'all';
+          document.getElementById('stateFilterSelect').value = 'all';
+          document.querySelectorAll('.seg-btn[data-type]').forEach(function (b) {
+            b.classList.toggle('active', b.getAttribute('data-type') === 'all');
+          });
+          renderAll();
+        } else {
+          renderAll();
+        }
+        const targetRow = document.getElementById('dl_' + targetId);
+        if (targetRow) targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      document.getElementById('timelineContainer').addEventListener('click', function (e) {
+        const item = e.target.closest('[data-focus-id]');
+        if (item) focusDeadlineFromTimeline(item.getAttribute('data-focus-id'));
+      });
+      document.getElementById('timelineContainer').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          const item = e.target.closest('[data-focus-id]');
+          if (item) {
+            e.preventDefault();
+            focusDeadlineFromTimeline(item.getAttribute('data-focus-id'));
+          }
+        }
+      });
+
+      // Confirm & Privacy modals
+      function closeConfirm() {
+        document.getElementById('confirmModalBackdrop').classList.remove('open');
+        confirmCallback = null;
+      }
+      document.getElementById('closeConfirmModalBtn').addEventListener('click', closeConfirm);
+      document.getElementById('cancelConfirmBtn').addEventListener('click', closeConfirm);
+      document.getElementById('confirmActionBtn').addEventListener('click', function () {
+        if (typeof confirmCallback === 'function') confirmCallback();
+        closeConfirm();
+      });
+
+      function openPrivacy() {
+        document.getElementById('mobileNavPanel').classList.remove('open');
+        document.getElementById('privacyModalBackdrop').classList.add('open');
+      }
+      document.getElementById('openPrivacyBtn').addEventListener('click', openPrivacy);
+      document.getElementById('openPrivacyMobileBtn').addEventListener('click', openPrivacy);
+      document.getElementById('closePrivacyModalBtn').addEventListener('click', function () { document.getElementById('privacyModalBackdrop').classList.remove('open'); });
+      document.getElementById('donePrivacyModalBtn').addEventListener('click', function () { document.getElementById('privacyModalBackdrop').classList.remove('open'); });
+
+      document.getElementById('exportDeadlinesCsvBtn').addEventListener('click', exportDeadlinesCsv);
+
+      document.getElementById('exportJsonBackupBtn').addEventListener('click', function () {
+        const payload = {
+          app: 'CLAIMBACK',
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          purchases: readJson(STORAGE_KEYS.PURCHASES, []),
+          deadlineMeta: readJson(STORAGE_KEYS.DEADLINE_META, {}),
+          customDeadlines: readJson(STORAGE_KEYS.CUSTOM_DEADLINES, []),
+          claims: readJson(STORAGE_KEYS.CLAIMS, [])
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'claimback-backup-' + todayYMD() + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Full JSON workspace backup downloaded.');
+      });
+
+      document.getElementById('importJsonFileInput').addEventListener('change', function (e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          try {
+            const data = JSON.parse(String(ev.target.result || ''));
+            if (!data || !Array.isArray(data.purchases) || !Array.isArray(data.claims)) {
+              showToast('Invalid JSON backup file.');
+              return;
+            }
+            writeJson(STORAGE_KEYS.PURCHASES, data.purchases);
+            writeJson(STORAGE_KEYS.DEADLINE_META, data.deadlineMeta || {});
+            writeJson(STORAGE_KEYS.CUSTOM_DEADLINES, data.customDeadlines || []);
+            writeJson(STORAGE_KEYS.CLAIMS, data.claims);
+            writeJson(STORAGE_KEYS.INIT, { seededAt: new Date().toISOString(), version: 1 });
+            document.getElementById('privacyModalBackdrop').classList.remove('open');
+            renderAll();
+            showToast('Backup restored successfully.');
+          } catch (err) {
+            showToast('Could not parse JSON backup.');
+          }
+          e.target.value = '';
+        };
+        reader.readAsText(file);
+      });
+
+      document.getElementById('restoreSamplesBtn').addEventListener('click', function () {
+        const sample = buildSampleDataset();
+        writeJson(STORAGE_KEYS.PURCHASES, sample.purchases);
+        writeJson(STORAGE_KEYS.DEADLINE_META, sample.deadlineMeta);
+        writeJson(STORAGE_KEYS.CUSTOM_DEADLINES, []);
+        writeJson(STORAGE_KEYS.CLAIMS, sample.claims);
+        writeJson(STORAGE_KEYS.INIT, { seededAt: new Date().toISOString(), version: 1 });
+        document.getElementById('privacyModalBackdrop').classList.remove('open');
+        renderAll();
+        showToast('Fictional sample records restored.');
+      });
+
+      document.getElementById('clearAllStorageBtn').addEventListener('click', function () {
+        document.getElementById('privacyModalBackdrop').classList.remove('open');
+        document.getElementById('confirmModalTitle').textContent = 'Clear All Local Data';
+        document.getElementById('confirmModalMessage').textContent = 'Erase all purchases, deadlines, and claims stored in this browser?';
+        document.getElementById('confirmActionBtn').textContent = 'Erase Local Data';
+        confirmCallback = function () {
+          writeJson(STORAGE_KEYS.PURCHASES, []);
+          writeJson(STORAGE_KEYS.DEADLINE_META, {});
+          writeJson(STORAGE_KEYS.CUSTOM_DEADLINES, []);
+          writeJson(STORAGE_KEYS.CLAIMS, []);
+          writeJson(STORAGE_KEYS.INIT, { seededAt: new Date().toISOString(), cleared: true, version: 1 });
+          renderAll();
+          showToast('All local CLAIMBACK data erased.');
+        };
+        document.getElementById('confirmModalBackdrop').classList.add('open');
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          document.querySelectorAll('.modal-backdrop.open').forEach(function (m) { m.classList.remove('open'); });
+        }
+      });
+      document.querySelectorAll('.modal-backdrop').forEach(function (backdrop) {
+        backdrop.addEventListener('click', function (e) {
+          if (e.target === backdrop) backdrop.classList.remove('open');
+        });
+      });
+
+      window.addEventListener('storage', renderAll);
+
+      renderAll();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "CLAIMBACK",
+  "description": "Consumer-protection utility to organize product purchases, receipts, return windows, warranty expirations, refundable deposits, and pending refund claims.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
