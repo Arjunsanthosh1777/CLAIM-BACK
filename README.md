@@ -1,20 +1,43 @@
-# CLAIMBACK — Consumer Protection Utility
+# CLAIMBACK — Dynamic Consumer Protection & Recovery Utility
 
-CLAIMBACK is a standalone, zero-backend consumer-protection web application built exclusively with **HTML5**, **CSS3**, and **Vanilla JavaScript**. It helps individuals organize product purchases, receipts, return windows, warranty durations, refundable deposits, and pending refund or warranty claims so deadlines are not missed and supporting evidence is ready before contacting a seller.
-
----
-
-## Project Files
-
-- `claimback.html` — **Purchase Vault**: Record purchases and refundable deposits, calculate return deadlines and warranty end dates (with exact seller-date overrides), distinguish seller-verified policies from user-entered estimates, attach local proof-of-purchase metadata/previews, search/filter/sort records, and export CSVs.
-- `deadlines.html` — **Deadline Radar**: View return windows, warranty expirations, refundable deposits, and claim follow-ups sorted by urgency, filter by category and workflow status (`Needs Action`, `In Progress`, `Completed`, `Not Applicable`), set earlier preparation dates, flag missing information, and inspect a chronological Event Timeline.
-- `recovery-center.html` — **Recovery Center**: Create refund, return, repair, replacement, or deposit claims linked to Purchase Vault items, track claim statuses (`Draft`, `Submitted`, `Awaiting Response`, `Resolved`, `Rejected`, `Closed`), calculate **Requested**, **Pending**, **Seller-Approved (Unpaid)**, and **Confirmed Recovered (Received)** amounts separately, manage interactive supporting-evidence checklists, generate editable correspondence letters with clipboard copy, log dated activity history, and export CSV/TXT summaries.
-- `index.html` — Launchpad entry point that automatically routes to `claimback.html`.
-- `prompts.txt` — Contains the master prompt and engineering implementation prompts.
+CLAIMBACK helps individuals organize product purchases, receipts, return windows, warranty durations, refundable deposits, and pending refund or warranty claims across **INR (₹ — Indian Rupee)**, **USD ($)**, **EUR (€)**, **GBP (£)**, **AED**, **SGD**, **CAD**, and **AUD** so deadlines are not missed and supporting evidence is ready before contacting a seller.
 
 ---
 
-## How to Run the Application
+## Application Editions Included
+
+1. **Dynamic Single-Page Web Application (`/`)**:
+   - Interactive **Overview Command** with a Live Coverage Simulator, Smart Receipt Quick-Parser (`₹`, `Rs.`, `INR`, `$`, `€`, `£`), and Recovery Accounting Pipeline.
+   - **Purchase Vault** with animated Card & Ledger switchers, per-record currency entry, and live return/warranty progress bars.
+   - **Deadline Radar** with Priority Queue, Interactive Monthly Calendar Grid, and Chronological Event Timeline.
+   - **Recovery Center** with Split Claim Studio, Kanban Pipeline Board, customizable correspondence letters, evidence checklists, and strict financial separation.
+   - **Dynamic Preferences**: Instant multi-currency switcher (`INR ₹` with `en-IN` lakh/crore formatting + global currencies), Dynamic Typography scaling (`A- / A / A+`), Light/Dark dual-theme toggle, and `localStorage` + `/api/workspace` persistence.
+2. **Standalone Zero-Build HTML Pages** (also available directly):
+   - `claimback.html` — Standalone **Purchase Vault**
+   - `deadlines.html` — Standalone **Deadline Radar**
+   - `recovery-center.html` — Standalone **Recovery Center**
+   - `prompts.txt` — Master prompt and implementation prompts.
+
+---
+
+## Deploying to Vercel (Zero Config)
+
+This repository is pre-configured for **Vercel** via `vercel.json` and serverless functions in `/api/health.ts` and `/api/workspace.ts` (zero paid APIs or environment secrets required).
+
+### Method 1: GitHub + Vercel Dashboard (Recommended)
+1. Push or export this project to a GitHub repository.
+2. Open [vercel.com/new](https://vercel.com/new) and import your repository.
+3. Vercel automatically reads `vercel.json` (`buildCommand`: `npm run build:vercel`, `outputDirectory`: `dist`, SPA rewrites for `/vault`, `/deadlines`, `/recovery`, plus standalone `/claimback.html`, `/deadlines.html`, `/recovery-center.html`).
+4. Click **Deploy**.
+
+### Method 2: Vercel CLI (1 Command)
+```bash
+npm install && npx vercel --prod
+```
+
+---
+
+## Running Locally
 
 ### Option 1: Open Directly in Any Modern Browser (No Server or Build Required)
 1. Download or locate the project folder on your computer.

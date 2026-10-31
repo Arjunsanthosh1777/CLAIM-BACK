@@ -1,0 +1,22 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "buildCommand": "npm run build:vercel",
+  "outputDirectory": "dist",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/claimback.html", "destination": "/claimback.html" },
+    { "source": "/deadlines.html", "destination": "/deadlines.html" },
+    { "source": "/recovery-center.html", "destination": "/recovery-center.html" },
+    { "source": "/((?!assets/|api/|.*\\..*).*)", "destination": "/index.html" }
+  ]
+}

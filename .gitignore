@@ -6,3 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
+.vercel/
+.claimback-workspace.json
+server.js
